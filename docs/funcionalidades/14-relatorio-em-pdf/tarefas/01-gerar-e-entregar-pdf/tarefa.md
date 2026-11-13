@@ -1,6 +1,6 @@
 # F14-T01 Gerar e entregar PDF
 
-Status: a fazer
+Status: em andamento
 
 Dependência: fundamentos de autorização, consulta e entrega da F13-T01 implementados e verificados nesta branch. Não exige merge para desenvolver a continuação.
 
