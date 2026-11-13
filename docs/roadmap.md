@@ -38,8 +38,8 @@ o registro de agentes conectados e a execução dos pedidos ficam no Serviço de
 | [F10](funcionalidades/10-conexao-de-agentes/) | Conexão de agentes | Como administrador, conectar e desconectar um agente do workspace. Quem não administra vê os agentes e a quem pedir. | F01 | concluída |
 | [F11](funcionalidades/11-resumo-de-conversa-pelo-agente/) | Resumo de conversa pelo agente | Mencionar o agente e receber na conversa um resumo com recorte (hoje, desde ontem, a semana, tudo, por pessoa, por assunto). Sem recorte, escolher por um botão ou responder sem mencionar o agente de novo. | F03, F10 | concluída |
 | [F12](funcionalidades/12-delegacao-de-tarefa-pelo-agente/) | Delegação de Tarefa pelo agente | Pedir ao agente que delegue uma Tarefa a alguém mencionado. Quem recebe é notificado, vê a Tarefa em Atividade → Tarefas e a conclui ou reabre, e quem delegou é avisado. | F08, F11 | concluída |
-| F13 | Consulta a dados de negócio | Perguntar sobre os números do negócio em linguagem natural e receber a resposta em texto na conversa, que fica bloqueada para quem não tem permissão de dados. | F11 | planejada |
-| F14 | Relatório em PDF | Pedir um relatório em PDF, seguir conversando enquanto ele é gerado e baixá-lo na conversa quando ficar pronto, desde que tenha permissão. | F13 | planejada |
+| [F13](funcionalidades/13-consulta-a-dados-de-negocio/) | Consulta a dados de negócio | Perguntar sobre os números do negócio em linguagem natural e receber a resposta em texto na conversa, que fica bloqueada para quem não tem permissão de dados. | F11 | em andamento |
+| [F14](funcionalidades/14-relatorio-em-pdf/) | Relatório em PDF | Pedir um relatório em PDF, seguir conversando enquanto ele é gerado e baixá-lo na conversa quando ficar pronto, desde que tenha permissão. | F13 | spec pronta |
 
 ### Mapa de pendências
 
