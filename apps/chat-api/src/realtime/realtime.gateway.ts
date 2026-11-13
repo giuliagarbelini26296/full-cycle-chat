@@ -35,6 +35,7 @@ import { PresenceTracker } from '../presence/presence-tracker';
 import { EventsStore } from './events.store';
 import { SESSION_RECHECK_INTERVAL_MS } from './realtime-values';
 import type { RealtimeServer, RealtimeSocket } from './realtime-socket';
+import { protectMessage } from '../messages/message.response';
 
 const UNAUTHENTICATED: HandshakeErrorCode = 'unauthenticated';
 
@@ -125,8 +126,19 @@ export class RealtimeGateway
       // anterior ou posterior, fica de fora.
       for (const event of result.events) {
         if (!isStoredEventName(event.name)) continue;
+        const payload = event.payload as StoredEvent & {
+          message?: import('chat-events').MessagePayload;
+        };
         emitStoredEvent(socket, event.name, {
-          ...(event.payload as StoredEvent),
+          ...payload,
+          ...(payload.message
+            ? {
+                message: protectMessage(
+                  payload.message,
+                  socket.data.person.hasDataAccess,
+                ),
+              }
+            : {}),
           event_id: event.cursor,
         });
       }
@@ -266,16 +278,26 @@ export class RealtimeGateway
   // disputar o pool do banco com as requisições. Usa o mesmo authenticate do REST, que também a
   // renova. A Sessão revogada ou vencida encerra as abas dela; outra falha, como o banco fora, as
   // mantém até a próxima volta.
-  async recheckSessions(): Promise<void> {
+  async recheckSessions(personIds?: readonly string[]): Promise<void> {
     const tokens = new Map<string, string>();
     for (const socket of this.server.sockets.sockets.values()) {
+      if (personIds && !personIds.includes(socket.data.person.id)) continue;
       if (socket.data.sessionId) {
         tokens.set(socket.data.sessionId, socket.data.sessionToken);
       }
     }
     for (const [sessionId, token] of tokens) {
       try {
-        await this.sessions.authenticate(token);
+        const { person } = await this.sessions.authenticate(token);
+        for (const socket of this.server.sockets.sockets.values()) {
+          if (
+            socket.data.sessionId === sessionId &&
+            socket.data.person.hasDataAccess !== person.hasDataAccess
+          ) {
+            this.endSession(this.server, sessionRoom(sessionId));
+            break;
+          }
+        }
       } catch (error) {
         if (error instanceof UnauthenticatedError) {
           this.endSession(this.server, sessionRoom(sessionId));

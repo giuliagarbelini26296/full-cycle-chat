@@ -37,7 +37,9 @@ export class ActivityController {
       limit: query.limit,
     });
     return {
-      items: page.items.map((item) => toActivityItemResponse(item, person.id)),
+      items: page.items.map((item) =>
+        toActivityItemResponse(item, person.id, person.hasDataAccess),
+      ),
       has_more: page.hasMore,
     };
   }

@@ -132,6 +132,7 @@ export class PeopleService {
       | 'presenceChoice'
       | 'theme'
       | 'isAdmin'
+      | 'hasDataAccess'
     >,
   ): Promise<Person | null> {
     const person = this.people.create({ ...values, id: randomUUIDv7() });
@@ -147,6 +148,7 @@ export class PeopleService {
         'presence_choice',
         'theme',
         'is_admin',
+        'has_data_access',
       ])
       .execute();
     const [row] = inserted.raw as {
@@ -156,6 +158,7 @@ export class PeopleService {
       presence_choice: Presence;
       theme: Theme;
       is_admin: boolean;
+      has_data_access: boolean;
     }[];
     if (!row) return null;
     return this.people.merge(person, {
@@ -165,6 +168,7 @@ export class PeopleService {
       presenceChoice: row.presence_choice,
       theme: row.theme,
       isAdmin: row.is_admin,
+      hasDataAccess: row.has_data_access,
     });
   }
 
@@ -323,6 +327,22 @@ export class PeopleService {
       .update()
       .set({ isAdmin })
       .where('id = :personId AND is_admin <> :isAdmin', { personId, isAdmin })
+      .execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async setDataAccess(
+    personId: string,
+    hasDataAccess: boolean,
+  ): Promise<boolean> {
+    const result = await this.people
+      .createQueryBuilder()
+      .update()
+      .set({ hasDataAccess })
+      .where('id = :personId AND has_data_access <> :hasDataAccess', {
+        personId,
+        hasDataAccess,
+      })
       .execute();
     return (result.affected ?? 0) > 0;
   }

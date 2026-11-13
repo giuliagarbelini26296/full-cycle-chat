@@ -56,6 +56,7 @@ describe('sessões', () => {
         presence_choice: 'available',
         theme: 'light',
         is_admin: false,
+        has_data_access: false,
       });
       const rows = await app
         .get(DataSource)
@@ -144,6 +145,7 @@ describe('sessões', () => {
           presence_choice: 'available',
           theme: 'light',
           is_admin: false,
+          has_data_access: false,
         },
       });
     });

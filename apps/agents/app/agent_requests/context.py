@@ -19,6 +19,8 @@ REQUESTED_AT = "requested_at"
 MENTIONS = "mentions"
 # `new` ou `continuation`: a continuação não pergunta de novo (F11-T07).
 KIND = "kind"
+ORIGINAL_QUESTION = "original_question"
+HAS_DATA_ACCESS = "has_data_access"
 # A ferramenta que já gravou o fim do Pedido, `{"pedido": id, "desfecho": "question" | "task"}`:
 # a pergunta com as Respostas prontas (F11-T07) ou a Tarefa com a confirmação (F12-T01). O Pedido
 # termina sem `reply`.

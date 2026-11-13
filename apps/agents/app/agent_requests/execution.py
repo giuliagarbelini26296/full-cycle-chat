@@ -25,9 +25,12 @@ from google.adk.sessions import BaseSessionService, Session
 from google.genai import types
 
 from app.agent_requests import context
+from app.agent_requests.model_budget import CURRENT_MODEL_BUDGET, ModelBudget
 from app.agent_requests.models import AgentRequestBody
 from app.agent_requests.recorte import to_api_instant, uuid7_instant
+from app.business.service import CURRENT_BUSINESS_SETTINGS
 from app.chat_api import CURRENT_CHAT_API, ChatApiClient, ChatApiError
+from app.config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +46,14 @@ REQUEST_GONE = frozenset({404, 409, 410})
 # reply: gravou o texto do modelo; question: a ferramenta gravou a pergunta (F11-T07); task: a
 # ferramenta delegou a Tarefa e gravou a confirmação (F12-T01); failed: gravou o "não consegui";
 # discarded: nada foi gravado.
-Outcome = Literal["reply", "question", "task", "failed", "discarded"]
+Outcome = Literal["reply", "question", "task", "business", "failed", "discarded"]
 
 
 @dataclass(frozen=True)
 class ExecutionDeps:
     session_service: BaseSessionService
     chat_api: ChatApiClient
+    business_settings: Settings | None = None
     run_config: RunConfig = field(
         default_factory=lambda: RunConfig(max_llm_calls=MAX_LLM_CALLS)
     )
@@ -63,6 +67,7 @@ class Usage:
 
     input_tokens: int = 0
     output_tokens: int = 0
+    model_calls: int = 0
 
     def add(self, metadata: types.GenerateContentResponseUsageMetadata | None) -> None:
         if metadata:
@@ -94,6 +99,8 @@ def request_state(request: AgentRequestBody) -> dict[str, object]:
         context.REQUESTED_AT: to_api_instant(requested_at(request)),
         context.MENTIONS: [mention.model_dump() for mention in request.mentions],
         context.KIND: request.kind,
+        context.ORIGINAL_QUESTION: request.message.body,
+        context.HAS_DATA_ACCESS: request.requester.has_data_access,
     }
 
 
@@ -133,7 +140,7 @@ class RunResult:
 
     text: str | None = None
     # O desfecho que a ferramenta já gravou (`context.ANSWERED_BY_TOOL`), ou nenhum.
-    answered: Literal["question", "task"] | None = None
+    answered: Literal["question", "task", "business"] | None = None
 
 
 async def run_agent(
@@ -204,7 +211,20 @@ async def run_request(request: AgentRequestBody, deps: ExecutionDeps) -> None:
 async def execute(
     request: AgentRequestBody, deps: ExecutionDeps, usage: Usage
 ) -> Outcome:
-    CURRENT_CHAT_API.set(deps.chat_api)
+    chat_token = CURRENT_CHAT_API.set(deps.chat_api)
+    budget_token = CURRENT_MODEL_BUDGET.set(ModelBudget(usage=usage))
+    settings_token = CURRENT_BUSINESS_SETTINGS.set(deps.business_settings)
+    try:
+        return await _execute(request, deps, usage)
+    finally:
+        CURRENT_BUSINESS_SETTINGS.reset(settings_token)
+        CURRENT_MODEL_BUDGET.reset(budget_token)
+        CURRENT_CHAT_API.reset(chat_token)
+
+
+async def _execute(
+    request: AgentRequestBody, deps: ExecutionDeps, usage: Usage
+) -> Outcome:
     request_id = str(request.request_id)
     log = {"request_id": request_id}
     result = RunResult()

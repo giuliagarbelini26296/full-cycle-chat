@@ -76,7 +76,7 @@ export type AgentRequestPayload = {
   agent: string;
   conversationId: string;
   message: { id: string; body: string };
-  requester: { id: string; name: string; username: string };
+  requester: { id: string; name: string; username: string; has_data_access?: boolean };
   mentions: { username: string; name: string }[];
   timeZone: string;
   // A Mensagem citada pelo Pedido, ou nula (spec da F12, "Rota de Pedido e execução").

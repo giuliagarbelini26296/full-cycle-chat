@@ -245,8 +245,12 @@ O agente grava a resposta marcada como "dados de negócio". Na entrega, no hist�
 WebSocket, a API do chat manda o conteúdo só para quem tem permissão de dados; os outros membros
 veem a mensagem bloqueada. O link do PDF segue a mesma regra (6.5).
 
-O mecanismo que impede o conteúdo da conversa de influenciar a consulta e o lugar da auditoria
-estão a definir (seção 12).
+O planejador SQL recebe somente a pergunta original autenticada e o esquema permitido, numa
+sessão isolada, sem histórico, citação ou ferramentas do chat. Um redator também isolado recebe
+o resultado e a resposta é conferida antes da entrega protegida; o agente principal recebe só
+o estado da entrega. A auditoria fica no Banco dos agentes, sem resultados ou histórico.
+Contratos e verificações: [spec da F13](funcionalidades/13-consulta-a-dados-de-negocio/spec.md).
+A retenção dessa auditoria segue pendente para operação corporativa.
 
 ### 6.5 Relatório em PDF em segundo plano
 
@@ -411,7 +415,7 @@ implantação, está a definir.
 
 | Risco ou dívida | Impacto | Mitigação ou plano |
 | --- | --- | --- |
-| Isolamento entre a conversa e a consulta não definido | Um texto plantado na conversa pode desviar a consulta para outros dados de negócio; o objetivo d fica sustentado só pelo somente leitura | Decidir o mecanismo (seção 12) |
+| Interpretação da pergunta em SQL | Isolamento, leitura restrita e lastro não provam que o modelo interpretou corretamente cada filtro de negócio | Comparar perguntas de referência com resultados conhecidos na avaliação da F13 |
 | Auditoria das consultas sem lugar definido | Consultas sem registro enquanto não houver decisão; o objetivo f fica sem rastreio posterior | Decidir onde fica e por quanto tempo (seção 12) |
 | Três bancos na mesma instância de Postgres | Consulta pesada de negócio disputa recursos com o chat; erro de permissão expõe o chat ao agente | Usuário só leitura com acesso apenas ao Banco de negócio; limite de tempo de consulta no LLD |
 | Sem staging | A primeira execução na PaaS já é em produção | Pipeline com testes e volta automática da PaaS |
@@ -428,9 +432,9 @@ implantação, está a definir.
 - [ ] Hipóteses de dimensionamento (contas, pessoas conectadas no pico, mensagens por dia, pedidos
       aos agentes e PDFs por dia, tamanho do banco de negócio), o número de instâncias de cada
       contêiner e o que faria o desenho ser revisto (seções 3 e 9).
-- [ ] Mecanismo que impede o conteúdo da conversa de influenciar a consulta ao banco (6.4). Trava
+- [x] Mecanismo que impede o conteúdo da conversa de influenciar a consulta ao banco (6.4). Trava
       o objetivo d.
-- [ ] Onde fica a auditoria das consultas e por quanto tempo (6.4). Trava o objetivo f.
+- [ ] Retenção da auditoria das consultas para uso corporativo; o armazenamento no Banco dos agentes está definido (6.4).
 - [ ] Retenção dos PDFs no armazenamento (seção 7).
 - [ ] O que a LGPD impõe ao desenho: onde os dados ficam, retenção, direito de apagar (seção 8).
 - [ ] Alertas: quem é avisado e de quê (seção 8).

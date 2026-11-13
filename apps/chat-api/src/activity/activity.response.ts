@@ -42,6 +42,7 @@ export interface ActivityUnreadResponse {
 export function toActivityItemResponse(
   item: ActivityItem,
   viewerId: string,
+  hasDataAccess = false,
 ): ActivityItemResponse {
   if (item.kind === 'task') {
     return {
@@ -57,7 +58,7 @@ export function toActivityItemResponse(
   }
   return {
     kind: item.kind,
-    message: toMessageResponse(item.message),
+    message: toMessageResponse(item.message, hasDataAccess),
     conversation: toConversationResponse(item.conversation, viewerId),
   };
 }

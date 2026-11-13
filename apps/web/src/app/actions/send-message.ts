@@ -4,6 +4,7 @@ import isUUID from "validator/lib/isUUID";
 import { type Agent, listAgents, startAgentRequest } from "@/app/services/agents-service";
 import {
   closeAgentRequest,
+  getCurrentPerson,
   listMembers,
   type Mention,
   sendMessage as sendMessageToChat,
@@ -52,9 +53,10 @@ export async function sendMessage(
   }
   if (result.kind === "ok" && result.agentRequest) {
     const { message: sent, agentRequest } = result;
-    const [mentions, timeZone] = await Promise.all([
+    const [mentions, timeZone, identity] = await Promise.all([
       requestMentions(token, conversationId, sent.mentions),
       readTimeZone(),
+      getCurrentPerson(token),
     ]);
     const failure = agentRequestFailure(
       await startAgentRequest({
@@ -64,7 +66,7 @@ export async function sendMessage(
         agent: agentRequest.botUsername,
         conversationId,
         message: { id: sent.id, body: sent.body },
-        requester: { id: sent.author.id, name: sent.author.name, username: sent.author.username },
+        requester: { id: sent.author.id, name: sent.author.name, username: sent.author.username, has_data_access: identity.kind === 'ok' && identity.person.hasDataAccess === true },
         mentions,
         timeZone,
         quote: agentRequestQuote(sent.quote),

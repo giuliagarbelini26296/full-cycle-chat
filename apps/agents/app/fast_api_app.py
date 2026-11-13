@@ -107,7 +107,11 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(
         build_requests_router(
             catalog,
-            ExecutionDeps(session_service=session_service, chat_api=chat_api),
+            ExecutionDeps(
+                session_service=session_service,
+                chat_api=chat_api,
+                business_settings=settings,
+            ),
             RequestRateLimiter(redis, settings.agent_requests_per_minute),
         )
     )

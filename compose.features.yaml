@@ -1,0 +1,30 @@
+# Ambiente isolado para validar consultas e relatórios sem alterar o piloto.
+services:
+  web:
+    image: fullcycle-slack-ia-web
+    ports: !reset []
+  chat-api:
+    image: fullcycle-slack-ia-chat-api
+    ports: !reset []
+  agents:
+    image: fullcycle-slack-ia-agents
+    ports: !reset []
+    environment:
+      BUSINESS_DATABASE_URL: postgresql://business_readonly:business_readonly@postgres:5432/business
+  postgres:
+    ports: !reset []
+  redis:
+    ports: !reset []
+  s3:
+    ports: !reset []
+  e2e:
+    image: digitaly-e2e:playwright-1.65.0
+    environment:
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright-digitaly
+    volumes:
+      - features-browser:/ms-playwright-digitaly
+
+volumes:
+  features-browser:
+    external: true
+    name: digitaly-validation_validation-browser

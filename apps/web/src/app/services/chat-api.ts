@@ -48,25 +48,28 @@ type ApiPerson = {
   theme: Theme;
   // O papel de administrador (spec da F10, "Papel de administrador").
   is_admin: boolean;
+  has_data_access?: boolean;
 };
 
 // As iniciais saem aqui, no servidor, e seguem prontas para os componentes do cliente
 // (utils/initials.ts).
-export type Person = Omit<ApiPerson, "time_zone" | "presence_choice" | "is_admin"> & {
+export type Person = Omit<ApiPerson, "time_zone" | "presence_choice" | "is_admin" | "has_data_access"> & {
   initials: string;
   timeZone: string | null;
   // A escolha de presença (spec da F09, "Pessoas").
   presenceChoice: Presence;
   isAdmin: boolean;
+  hasDataAccess?: boolean;
 };
 
 function toPerson({
   time_zone: timeZone,
   presence_choice: presenceChoice,
   is_admin: isAdmin,
+  has_data_access: hasDataAccess = false,
   ...person
 }: ApiPerson): Person {
-  return { ...withInitials(person), timeZone, presenceChoice, isAdmin };
+  return { ...withInitials(person), timeZone, presenceChoice, isAdmin, hasDataAccess };
 }
 
 export type LoginResult =

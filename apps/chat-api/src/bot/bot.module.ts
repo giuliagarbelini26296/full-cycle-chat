@@ -8,6 +8,7 @@ import { TasksModule } from '../tasks/tasks.module';
 import { BotActionsService } from './bot-actions.service';
 import { BotController } from './bot.controller';
 import { BotTokenGuard } from './bot-token.guard';
+import { PeopleModule } from '../people/people.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { BotTokenGuard } from './bot-token.guard';
     RealtimeModule,
     TasksModule,
     NotificationsModule,
+    PeopleModule,
   ],
   controllers: [BotController],
   providers: [BotActionsService, BotTokenGuard],

@@ -20,6 +20,9 @@ export interface MessagePayload {
   client_id: string;
   author: MessageAuthorPayload;
   body: string;
+  /** Conteúdo de negócio: exige permissão vigente, inclusive no replay. */
+  business_data?: boolean;
+  restricted?: boolean;
   created_at: string;
   /** A hora da última edição que mudou o texto, ou nulo (spec da F06, "Mensagens"). */
   edited_at: string | null;
@@ -44,7 +47,7 @@ export interface QuickRepliesPayload {
 
 /** A Mensagem citada: o autor e o texto atual, ou só a marca de apagada. */
 export type QuotePayload =
-  | { id: string; deleted: false; author: MessageAuthorPayload; body: string }
+  | { id: string; deleted: false; author: MessageAuthorPayload; body: string; business_data?: boolean; restricted?: boolean }
   | { id: string; deleted: true };
 
 /** Uma Pessoa mencionada numa Mensagem. */

@@ -18,6 +18,8 @@ from google.adk.apps import App
 
 from app.eval_fixtures import fixture_tool_callback
 from app.model import build_model, generation_config
+from app.agent_requests.model_budget import count_model_call
+from app.business.service import consultar_negocio
 
 from .instructions import build_instruction
 from .tools import delegar_tarefa, ler_mensagens, perguntar_delegacao, perguntar_recorte
@@ -35,7 +37,14 @@ root_agent = Agent(
     generate_content_config=generation_config(),
     # Instruções do resumo e da delegação (specs da F11 e da F12, "O Agente `assistente`").
     instruction=build_instruction,
-    tools=[ler_mensagens, perguntar_recorte, delegar_tarefa, perguntar_delegacao],
+    tools=[
+        ler_mensagens,
+        perguntar_recorte,
+        delegar_tarefa,
+        perguntar_delegacao,
+        consultar_negocio,
+    ],
+    before_model_callback=count_model_call,
     # Só age na avaliação, com a Conversa da fixture do caso (app/eval_fixtures.py).
     before_tool_callback=fixture_tool_callback,
 )

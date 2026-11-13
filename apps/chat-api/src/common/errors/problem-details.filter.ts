@@ -24,6 +24,7 @@ const DETAILS: Record<ErrorCode, string> = {
   message_not_found: 'Mensagem não encontrada.',
   message_not_owned: 'Só quem escreveu a Mensagem pode mudá-la.',
   forbidden: 'Só administradores podem fazer isso.',
+  data_access_denied: 'Acesso aos dados de negócio não autorizado.',
   quoted_message_not_found: 'A Mensagem citada não existe nesta Conversa.',
   not_found: 'Recurso não encontrado.',
   payload_too_large: 'O corpo da requisição é grande demais.',

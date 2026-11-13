@@ -88,6 +88,9 @@ export class Person extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isAdmin!: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  hasDataAccess!: boolean;
+
   // Fuso IANA do navegador da Pessoa, gravado por ela (F05-T03).
   @Column({ type: 'text', nullable: true })
   timeZone!: string | null;

@@ -18,6 +18,8 @@ import { partiesOf } from '../tasks/task.entity';
 import { notificationFor, toTaskResponse } from '../tasks/task.response';
 import { TasksService, type TaskView } from '../tasks/tasks.service';
 import { SUMMARY_MESSAGE_LIMIT } from './bot-values';
+import { PeopleService } from '../people/people.service';
+import { DataAccessDeniedError } from './data-access-denied.error';
 
 // As ações do bot na Conversa, sempre dentro de um Pedido real (ADR 0011; spec da F11, "Rotas do bot
 // e credencial"): a Conversa e o bot vêm do Pedido, e nunca de quem chama.
@@ -31,6 +33,7 @@ export class BotActionsService {
     private readonly realtime: RealtimePublisher,
     private readonly tasks: TasksService,
     private readonly activity: ActivityPublisher,
+    private readonly people: PeopleService,
   ) {}
 
   // As Mensagens de Pessoas do Recorte, na Conversa do Pedido, no máximo as do teto do resumo, com
@@ -78,17 +81,31 @@ export class BotActionsService {
 
   // Grava a resposta do bot ao Pedido e emite o fim do "digitando". Repetida, devolve a Mensagem já
   // gravada, sem gravar nem publicar (LLD, "Concorrência e idempotência", "Ação de bot").
-  async reply(requestId: string, body: string): Promise<MessageView> {
+  async reply(
+    requestId: string,
+    body: string,
+    businessData = false,
+  ): Promise<MessageView> {
     const { message, written } = await this.once(
       requestId,
       'reply',
-      async (request) => ({
-        message: await this.messages.insertBotMessage(
-          request.botId,
-          request.conversationId,
-          body,
-        ),
-      }),
+      async (request) => {
+        if (
+          businessData &&
+          !(await this.people.findById(request.requesterId))?.hasDataAccess
+        ) {
+          throw new DataAccessDeniedError();
+        }
+        return {
+          message: await this.messages.insertBotMessage(
+            request.botId,
+            request.conversationId,
+            body,
+            null,
+            businessData,
+          ),
+        };
+      },
     );
     if (written) this.announceAnswer(message);
     return message;

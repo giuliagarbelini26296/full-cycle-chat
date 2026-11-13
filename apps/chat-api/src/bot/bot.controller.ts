@@ -71,7 +71,11 @@ export class BotController {
     @Param('requestId') requestId: string,
     @Body() body: ReplyDto,
   ): Promise<{ message: MessageResponse }> {
-    const message = await this.actions.reply(requestId, body.body);
+    const message = await this.actions.reply(
+      requestId,
+      body.body,
+      body.business_data,
+    );
     return { message: toMessageResponse(message) };
   }
 

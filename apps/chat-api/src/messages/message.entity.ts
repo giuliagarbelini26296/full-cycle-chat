@@ -23,6 +23,7 @@ import { MESSAGE_MAX_LENGTH } from './message-values';
   'messages_author_check',
   'num_nonnulls("author_person_id", "author_bot_id") = 1',
 )
+@Check('messages_business_bot_check', 'NOT business_data OR author_bot_id IS NOT NULL')
 // Só a Mensagem apagada fica sem texto (spec da F06, "Apagar"); a migração escreve o mesmo CHECK.
 @Check(
   'messages_body_check',
@@ -59,6 +60,9 @@ export class Message extends BaseEntity {
   // Nulo só na Mensagem apagada, pelo CHECK do banco (spec da F06, "Apagar").
   @Column({ type: 'text', nullable: true })
   body!: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  businessData!: boolean;
 
   // A hora da última edição que mudou o texto (spec da F06, "Mensagens").
   @Column({ type: 'timestamptz', nullable: true })

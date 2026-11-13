@@ -22,6 +22,7 @@ Implementar a consulta prevista no brief e no HLD 6.4, preservando as ADRs 0012,
 - Base demonstrativa idempotente de vendas: clientes, vendedores e pedidos, com valores monetários decimais. Não importar planilhas ou documentos da empresa. A carga usa o dono da base; o agente não tem essa credencial.
 - Limites iniciais configuráveis: consulta de 3 s, 100 linhas entregues, pergunta até o limite original da Mensagem, saída dentro do teto da Mensagem. Truncamento é explícito; sem interpolar SQL fornecido fora do parser.
 - Conferência numérica com Decimal, formatos brasileiros e datas, usando os valores retornados. Percentuais derivados precisam vir da consulta, conforme ADR 0014. Se falhar, não entregar o rascunho.
+- Se houver orçamento restante, uma redação sem lastro pode ser refeita uma vez em sessão isolada somente com as células, sem a pergunta. A nova redação passa pela mesma conferência; não há interpolação ou correção determinística de números. Todas as chamadas continuam dentro do teto global.
 - Auditoria no Banco dos agentes: Pedido, Pessoa, Conversa, pergunta, SQL conferido, desfecho e tempos; nenhum resultado nem histórico. Uma falha ao registrar auditoria impede execução da consulta. Os logs operacionais não repetem pergunta, SQL ou resultado.
 
 ## Decisões de teste

@@ -68,6 +68,7 @@ export interface MessageView {
   author: MessageAuthor;
   body: string;
   createdAt: Date;
+  businessData?: boolean;
   editedAt: Date | null;
   mentions: MentionView[];
   quote: QuoteView | null;
@@ -298,6 +299,7 @@ export class MessagesService {
     conversationId: string,
     body: string,
     quickReplies: string[] | null = null,
+    businessData = false,
   ): Promise<MessageView> {
     const message = await this.messages.save(
       this.messages.create({
@@ -308,6 +310,7 @@ export class MessagesService {
         body,
         quotedMessageId: null,
         quickReplies,
+        businessData,
       }),
     );
     const [bot] = await this.bots.findByIds([botId]);
@@ -344,7 +347,7 @@ export class MessagesService {
           const question = await this.viewById(questionMessageId);
           await this.publisher.messageUpdated(
             memberIds,
-            toMessageResponse(question),
+            toMessageResponse(question, true),
           );
         },
         'Falha ao publicar a pergunta encerrada',
@@ -428,7 +431,10 @@ export class MessagesService {
     message: MessageView,
     memberIds: string[],
   ): Promise<{ unread: Promise<void> }> {
-    await this.publisher.messageCreated(memberIds, toMessageResponse(message));
+    await this.publisher.messageCreated(
+      memberIds,
+      toMessageResponse(message, true),
+    );
     return {
       unread: this.unreadPublisher.publish(message.conversationId, memberIds),
     };
@@ -491,7 +497,7 @@ export class MessagesService {
               async (memberIds) => {
                 await this.publisher.messageUpdated(
                   memberIds,
-                  toMessageResponse(edited),
+                  toMessageResponse(edited, true),
                 );
                 // Só quem entrou ou saiu das Menções e ainda não tinha lido a Mensagem tem os
                 // números mudados (spec da F07).
@@ -968,6 +974,7 @@ export class MessagesService {
               deleted: false,
               author: authorOf(message),
               body: message.body ?? '',
+              ...(message.businessData ? { business_data: true } : {}),
             },
       );
     }
@@ -1096,6 +1103,7 @@ function toView(
     author,
     // As rotas só devolvem Mensagens vivas, com texto (spec da F06, "Histórico").
     body: message.body ?? '',
+    businessData: message.businessData,
     createdAt: message.createdAt,
     editedAt: message.editedAt ?? null,
     mentions,

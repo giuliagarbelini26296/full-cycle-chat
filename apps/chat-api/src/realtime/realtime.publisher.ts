@@ -8,6 +8,8 @@ import type {
   StoredEventPayloads,
 } from 'chat-events';
 import { EventsStore } from './events.store';
+import { PeopleService } from '../people/people.service';
+import { protectMessage } from '../messages/message.response';
 import { RealtimeGateway } from './realtime.gateway';
 import {
   conversationRoom,
@@ -27,10 +29,11 @@ export class RealtimePublisher {
   constructor(
     private readonly gateway: RealtimeGateway,
     private readonly events: EventsStore,
+    private readonly people: PeopleService,
   ) {}
 
   messageCreated(memberIds: string[], message: MessagePayload): Promise<void> {
-    return this.publish('message.created', memberIds, { message });
+    return this.publishMessage('message.created', memberIds, message);
   }
 
   // A Mensagem apagada, pelo id, para os Membros (spec da F06, "Tempo real").
@@ -43,7 +46,29 @@ export class RealtimePublisher {
 
   // A Mensagem editada, inteira, para os Membros (spec da F06, "Tempo real").
   messageUpdated(memberIds: string[], message: MessagePayload): Promise<void> {
-    return this.publish('message.updated', memberIds, { message });
+    return this.publishMessage('message.updated', memberIds, message);
+  }
+
+  private async publishMessage(
+    name: 'message.created' | 'message.updated',
+    memberIds: string[],
+    message: MessagePayload,
+  ): Promise<void> {
+    await this.gateway.recheckSessions(memberIds);
+    if (
+      !message.business_data &&
+      (!message.quote || message.quote.deleted || !message.quote.business_data)
+    ) {
+      return this.publish(name, memberIds, { message });
+    }
+    const allowed = new Set(
+      (await this.people.findByIds(memberIds))
+        .filter((person) => person.hasDataAccess)
+        .map((person) => person.id),
+    );
+    return this.publish(name, memberIds, (personId) => ({
+      message: protectMessage(message, allowed.has(personId)),
+    }));
   }
 
   // Pessoas que entraram numa Conversa: vai para todos os Membros dela depois da gravação (spec da

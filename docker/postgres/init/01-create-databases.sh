@@ -21,10 +21,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-'SQL'
 	GRANT CONNECT ON DATABASE chat_test TO chat;
 	GRANT CONNECT ON DATABASE agents TO agents;
 	GRANT CONNECT ON DATABASE business TO business, business_readonly;
+	REVOKE TEMPORARY ON DATABASE business FROM PUBLIC;
+	ALTER ROLE business_readonly SET default_transaction_read_only = on;
+	ALTER ROLE business_readonly SET statement_timeout = '3s';
 SQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname business <<-'SQL'
 	GRANT USAGE ON SCHEMA public TO business_readonly;
+	REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 	GRANT SELECT ON ALL TABLES IN SCHEMA public TO business_readonly;
 	-- Tabelas que o script de carga criar depois (como o papel business) já nascem legíveis.
 	ALTER DEFAULT PRIVILEGES FOR ROLE business IN SCHEMA public

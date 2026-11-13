@@ -36,7 +36,9 @@ export class MessagesController {
   ): Promise<{ messages: MessageResponse[]; has_more: boolean }> {
     const page = await this.messages.listPage(person.id, conversationId, query);
     return {
-      messages: page.messages.map(toMessageResponse),
+      messages: page.messages.map((message) =>
+        toMessageResponse(message, person.hasDataAccess),
+      ),
       has_more: page.hasMore,
     };
   }
@@ -61,7 +63,7 @@ export class MessagesController {
       },
     );
     return {
-      message: toMessageResponse(message),
+      message: toMessageResponse(message, person.hasDataAccess),
       agent_request: agentRequest && toAgentRequestResponse(agentRequest),
     };
   }
@@ -80,7 +82,7 @@ export class MessagesController {
       id,
       body.body,
     );
-    return { message: toMessageResponse(message) };
+    return { message: toMessageResponse(message, person.hasDataAccess) };
   }
 
   // Apaga a própria Mensagem (spec da F06, "Rotas").

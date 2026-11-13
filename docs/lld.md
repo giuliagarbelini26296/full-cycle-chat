@@ -17,7 +17,7 @@
 | Eventos do WebSocket | Tipos TypeScript em `packages/chat-events/` |
 | Schema do Banco do chat | `apps/chat-api/migrations/`, migrações do TypeORM |
 | Schema do Banco dos agentes | `apps/agents/migrations/`, migrações do Alembic; as tabelas de sessão são do ADK |
-| Schema do Banco de negócio | Script de carga em `apps/agents/scripts/` (planejado) |
+| Schema do Banco de negócio | `apps/agents/scripts/seed_business_demo.py`, carga fictícia idempotente |
 | Schema das variáveis de ambiente | O schema zod do módulo de configuração de cada projeto TypeScript (`apps/chat-api/src/config/env.schema.ts` e `apps/web/src/app/config/env.ts` existem); do projeto `agents`, `apps/agents/app/config.py` (existe) |
 | Práticas e comandos | `apps/*/AGENTS.md`, um por app, apontados pelo `AGENTS.md` da raiz |
 
@@ -188,10 +188,10 @@ novas tentativas e idempotência").
   membros recebem o evento com a versão bloqueada. O evento guardado nos eventos de reconexão
   segue a mesma regra, por pessoa. Mensagens sem a marca saem num evento só para a conversa
   ([ADR 0020](adr/0020-dados-de-negocio-pessoa-a-pessoa.md); depende de mudança no HLD). Uma
-  função única monta a mensagem para o histórico, o REST e os eventos, `planejada` na
-  [spec da F06](funcionalidades/06-acoes-na-mensagem/spec.md), seção "Mensagens". Ela também monta a versão de cada
-  destinatário de Atividade, `planejada` ([spec da F08](funcionalidades/08-notificacoes-e-atividade/spec.md), seção "Notificações e contagem"); a versão de
-  dados de negócio de cada destinatário segue a detalhar.
+  função única (`protectMessage`) monta a versão de cada destinatário no REST, nas citações,
+  em Atividade, no evento e no replay. O replay reconfere a permissão vigente; a mudança de
+  permissão encerra as Sessões, e a API reconfere antes de publicar Mensagens. `existe` na
+  [spec da F13](funcionalidades/13-consulta-a-dados-de-negocio/spec.md), seção "Decisões de implementação".
 
 ### Concorrência e idempotência
 
@@ -789,7 +789,8 @@ telas logadas, que corrigem o cookie (spec da F09, seção "Cliente", "Tema").
 | Intervalo do aviso de leitura | 1 s: no máximo um aviso de leitura por Conversa nesse intervalo (spec da F07) | Web | Constante |
 | Teto da contagem de não lidas | 100: as contagens de não lidas e de menções param nele, e o contador mostra `99+` (spec da F07); vale também para os números de Atividade (spec da F08) | API do chat e web | Constante |
 | Duração do Alerta | 8 s: o Alerta some sozinho depois disso (spec da F08) | Web | Constante |
-| Tempo limite da consulta ao Banco de negócio | A definir | Serviço de agentes e Worker | A definir |
+| Tempo limite da consulta ao Banco de negócio | 3 s | Serviço de agentes e Worker | `BUSINESS_QUERY_TIMEOUT_S` em `app/config.py` |
+| Limite de linhas da consulta de negócio | 100; exceder recusa e pede refinamento, sem entregar resultado parcial | Serviço de agentes e Worker | `BUSINESS_QUERY_MAX_ROWS` em `app/config.py` |
 | Tamanho da página | Padrão 50, máximo 100 | API do chat | Constante |
 | Limite da busca de Pessoas | 20 Pessoas por busca (spec da F04) | API do chat | Constante |
 | Espera da busca de Pessoas | 200 ms sem digitar antes de buscar (spec da F04) | Web | Constante |

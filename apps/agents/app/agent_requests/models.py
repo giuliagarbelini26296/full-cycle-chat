@@ -17,6 +17,7 @@ class Requester(BaseModel):
     id: uuid.UUID
     name: str
     username: str
+    has_data_access: bool = False
 
 
 class Mention(BaseModel):

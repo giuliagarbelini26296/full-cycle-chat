@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import PositiveInt, StringConstraints, ValidationError
+from pydantic import PositiveFloat, PositiveInt, StringConstraints, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Provider = Literal["gemini", "openai", "anthropic"]
@@ -86,6 +86,10 @@ class Settings(ModelSettings):
     agent_requests_per_minute: PositiveInt = 10
     # true liga as rotas genéricas do ADK e a interface web, só no desenvolvimento.
     adk_dev_routes: bool = False
+    # Ausente desativa as consultas sem impedir resumos/delegação.
+    business_database_url: str | None = None
+    business_query_timeout_s: PositiveFloat = 3
+    business_query_max_rows: PositiveInt = 100
     # Lidas também pelo código gerado (app_utils/services.py e fast_api_app.py).
     session_service_uri: str | None = None
     allow_origins: str | None = None
