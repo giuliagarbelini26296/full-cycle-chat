@@ -23,6 +23,20 @@ export const envSchema = z.object({
   // Credencial de bot que as rotas /v1/bot conferem (LLD, "Segurança"); o mesmo valor do Serviço
   // de agentes.
   CHAT_BOT_TOKEN: z.string().trim().min(1),
+  CHAT_WORKER_TOKEN: z.string().trim().min(1).optional(),
+  S3_ENDPOINT: z.url().optional(),
+  S3_PUBLIC_ENDPOINT: z.url().optional(),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  S3_REPORTS_BUCKET: z.string().min(1).default('reports'),
+  REPORT_REQUEST_TTL_SECONDS: z.coerce.number().int().positive().default(1800),
+  REPORT_DOWNLOAD_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(300)
+    .default(60),
+  REPORT_RETENTION_SECONDS: z.coerce.number().int().positive().default(86400),
 });
 
 export type Env = z.infer<typeof envSchema>;

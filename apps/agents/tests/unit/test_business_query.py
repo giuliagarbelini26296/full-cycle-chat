@@ -23,8 +23,19 @@ def test_aceita_agregacao_somente_nas_tabelas_permitidas():
         "SELECT * FROM orders FOR UPDATE",
         "SELECT public.sum(total) FROM orders",
         "SELECT 'orders'::regclass FROM orders",
+        "WITH secrets AS (SELECT * FROM orders) SELECT * FROM public.secrets",
+        "SELECT * FROM secrets WHERE EXISTS (WITH secrets AS (SELECT * FROM orders) SELECT * FROM secrets)",
+        "SELECT secrets.* FROM secrets CROSS JOIN (WITH secrets AS (SELECT * FROM orders) SELECT * FROM secrets) sub",
+        "WITH orders AS (SELECT 999 AS total) SELECT * FROM orders",
     ],
 )
 def test_recusa_escritas_catalogos_e_funcoes_nao_permitidas(sql):
     with pytest.raises(UnsafeQuery):
         validate_sql(sql)
+
+
+def test_cte_legitima_mantem_a_tabela_fisica_no_schema_permitido():
+    sql = validate_sql(
+        "WITH totals AS (SELECT SUM(total) AS receita FROM orders) SELECT receita FROM totals"
+    )
+    assert "public.orders" in sql

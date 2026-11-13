@@ -108,6 +108,9 @@ describe("agentRequestMentions", () => {
 });
 
 describe("agentRequestQuote", () => {
+  it('não encaminha conteúdo de negócio citado para o modelo principal',()=>{
+    expect(agentRequestQuote({id:'business',deleted:false,business_data:true,author:{id:'bot',kind:'bot',name:'Assistente',username:'assistente'},body:'Receita confidencial: 99999.'})).toBeNull();
+  });
   const author = { kind: "person" as const, id: "ana", name: "Ana Souza", username: "ana" };
 
   it("traz a Mensagem citada, com o texto atual e o autor", () => {

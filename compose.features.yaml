@@ -6,11 +6,37 @@ services:
   chat-api:
     image: fullcycle-slack-ia-chat-api
     ports: !reset []
+    environment:
+      CHAT_WORKER_TOKEN: dev-chat-worker-token
+      S3_ENDPOINT: http://s3:8333
+      S3_PUBLIC_ENDPOINT: http://s3:8333
+      S3_ACCESS_KEY_ID: fullcycle
+      S3_SECRET_ACCESS_KEY: fullcycle-secret
   agents:
     image: fullcycle-slack-ia-agents
     ports: !reset []
     environment:
       BUSINESS_DATABASE_URL: postgresql://business_readonly:business_readonly@postgres:5432/business
+      REPORT_REDIS_URL: redis://redis:6379/3
+  worker:
+    image: fullcycle-slack-ia-agents
+    init: true
+    profiles: [reports]
+    volumes:
+      - .:/home/app/repo
+    environment:
+      DATABASE_URL: postgresql+asyncpg://agents:agents@postgres:5432/agents
+      BUSINESS_DATABASE_URL: postgresql://business_readonly:business_readonly@postgres:5432/business
+      REPORT_REDIS_URL: redis://redis:6379/3
+      CHAT_API_URL: http://chat-api:3000
+      CHAT_WORKER_TOKEN: dev-chat-worker-token
+      S3_ENDPOINT: http://s3:8333
+      S3_ACCESS_KEY_ID: fullcycle
+      S3_SECRET_ACCESS_KEY: fullcycle-secret
+      S3_REPORTS_BUCKET: reports
+      UV_PYTHON_DOWNLOADS: never
+    command: [uv, run, --frozen, arq, app.reports.worker_main.WorkerSettings]
+    depends_on: [postgres, redis, s3, chat-api]
   postgres:
     ports: !reset []
   redis:
@@ -21,6 +47,7 @@ services:
     image: digitaly-e2e:playwright-1.65.0
     environment:
       PLAYWRIGHT_BROWSERS_PATH: /ms-playwright-digitaly
+      CHAT_WORKER_TOKEN: dev-chat-worker-token
     volumes:
       - features-browser:/ms-playwright-digitaly
 

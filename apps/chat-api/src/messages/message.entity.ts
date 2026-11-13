@@ -12,9 +12,11 @@ import { Conversation } from '../conversations/conversation.entity';
 import { BaseEntity } from '../database/base.entity';
 import { Person } from '../people/person.entity';
 import { MESSAGE_MAX_LENGTH } from './message-values';
+import type { ReportPayload } from 'chat-events';
 
 // O id (UUID v7) dá a ordem da Conversa; created_at é a hora mostrada na tela.
 @Entity('messages')
+@Check('messages_report_protected_check', 'report IS NULL OR business_data')
 @Index('messages_conversation_id_id_idx', ['conversationId', 'id'])
 @Unique('messages_author_client_key', ['authorPersonId', 'clientId'])
 // O autor é uma Pessoa ou o bot de um Agente, exatamente um (spec da F11, "Autor da Mensagem"); a
@@ -23,7 +25,10 @@ import { MESSAGE_MAX_LENGTH } from './message-values';
   'messages_author_check',
   'num_nonnulls("author_person_id", "author_bot_id") = 1',
 )
-@Check('messages_business_bot_check', 'NOT business_data OR author_bot_id IS NOT NULL')
+@Check(
+  'messages_business_bot_check',
+  'NOT business_data OR author_bot_id IS NOT NULL',
+)
 // Só a Mensagem apagada fica sem texto (spec da F06, "Apagar"); a migração escreve o mesmo CHECK.
 @Check(
   'messages_body_check',
@@ -63,6 +68,9 @@ export class Message extends BaseEntity {
 
   @Column({ type: 'boolean', default: false })
   businessData!: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  report!: ReportPayload | null;
 
   // A hora da última edição que mudou o texto (spec da F06, "Mensagens").
   @Column({ type: 'timestamptz', nullable: true })

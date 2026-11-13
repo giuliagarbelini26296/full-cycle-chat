@@ -4,6 +4,7 @@
 
 /** Quem escreveu a Mensagem: uma Pessoa ou o bot de um Agente (spec da F11, "Autor da Mensagem"). */
 export type MessageAuthorKind = "person" | "bot";
+export type ReportPayload = { id: string; status: "queued" | "ready" | "failed" };
 
 /** Autor de uma Mensagem, como no REST. */
 export interface MessageAuthorPayload {
@@ -23,6 +24,7 @@ export interface MessagePayload {
   /** Conteúdo de negócio: exige permissão vigente, inclusive no replay. */
   business_data?: boolean;
   restricted?: boolean;
+  report?: ReportPayload | null;
   created_at: string;
   /** A hora da última edição que mudou o texto, ou nulo (spec da F06, "Mensagens"). */
   edited_at: string | null;

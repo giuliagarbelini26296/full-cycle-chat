@@ -13,6 +13,7 @@ import { MessagesModule } from './messages/messages.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SessionsModule } from './sessions/sessions.module';
     ActivityModule,
     AgentsModule,
     BotModule,
+    ReportsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },

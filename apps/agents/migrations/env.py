@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.business import audit  # noqa: F401 — registra os metadados das consultas.
 from app.registry.store import REGISTRY_METADATA, include_registry_object
+from app.reports import store  # noqa: F401 — plano privado e tentativas.
 
 config = context.config
 if config.config_file_name is not None:

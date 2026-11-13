@@ -105,6 +105,12 @@ class ChatApiClient:
     async def close(self) -> None:
         await self._http.aclose()
 
+    async def start_report(self, request_id: str) -> None:
+        await self._request("POST", f"/v1/bot/requests/{request_id}/report")
+
+    async def fail_report(self, request_id: str) -> None:
+        await self._request("POST", f"/v1/bot/requests/{request_id}/report/fail")
+
     async def _request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         """A chamada a uma rota /v1/bot; fora de 2xx, ou sem resposta, `ChatApiError`."""
         try:

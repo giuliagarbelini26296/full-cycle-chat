@@ -46,7 +46,9 @@ REQUEST_GONE = frozenset({404, 409, 410})
 # reply: gravou o texto do modelo; question: a ferramenta gravou a pergunta (F11-T07); task: a
 # ferramenta delegou a Tarefa e gravou a confirmação (F12-T01); failed: gravou o "não consegui";
 # discarded: nada foi gravado.
-Outcome = Literal["reply", "question", "task", "business", "failed", "discarded"]
+Outcome = Literal[
+    "reply", "question", "task", "business", "report", "failed", "discarded"
+]
 
 
 @dataclass(frozen=True)
@@ -140,7 +142,7 @@ class RunResult:
 
     text: str | None = None
     # O desfecho que a ferramenta já gravou (`context.ANSWERED_BY_TOOL`), ou nenhum.
-    answered: Literal["question", "task", "business"] | None = None
+    answered: Literal["question", "task", "business", "report"] | None = None
 
 
 async def run_agent(

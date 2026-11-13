@@ -2,6 +2,7 @@ import type {
   MessageAuthorPayload,
   QuickRepliesPayload,
   QuotePayload,
+  ReportPayload,
 } from 'chat-events';
 import { MessageView } from './messages.service';
 
@@ -13,6 +14,7 @@ export interface MessageResponse {
   body: string;
   business_data?: boolean;
   restricted?: boolean;
+  report?: ReportPayload | null;
   created_at: string;
   edited_at: string | null;
   mentions: { id: string; username: string }[];
@@ -33,6 +35,7 @@ export function toMessageResponse(
       author: message.author,
       body: message.body,
       ...(message.businessData ? { business_data: true } : {}),
+      ...(message.report ? { report: message.report } : {}),
       created_at: message.createdAt.toISOString(),
       edited_at: message.editedAt?.toISOString() ?? null,
       mentions: message.mentions,
@@ -57,6 +60,7 @@ export function protectMessage<
     body: string;
     business_data?: boolean;
     restricted?: boolean;
+    report?: unknown;
     quote?: QuotePayload | null;
     mentions?: unknown[];
     quick_replies?: QuickRepliesPayload | null;
@@ -75,6 +79,7 @@ export function protectMessage<
           restricted: true,
           mentions: [],
           quick_replies: null,
+          ...(message.report ? { report: null } : {}),
         }
       : {}),
     ...(quote ? { quote: safeQuote } : {}),

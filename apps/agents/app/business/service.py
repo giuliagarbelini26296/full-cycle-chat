@@ -14,6 +14,8 @@ from app.business.models import plan_query, write_answer
 from app.business.query import read_query, validate_sql
 from app.chat_api import CURRENT_CHAT_API
 from app.config import Settings
+from app.reports.queue import enqueue_report
+from app.reports.store import save_plan
 
 CURRENT_BUSINESS_SETTINGS: ContextVar[Settings | None] = ContextVar(
     "business_settings", default=None
@@ -31,6 +33,20 @@ async def consultar_negocio(tool_context: ToolContext) -> dict[str, str]:
     reformulada: o código usa exclusivamente o texto original do Pedido autenticado.
     A ferramenta já publica a resposta. Depois dela não escreva nada.
     """
+    return await business_request(tool_context, as_report=False)
+
+
+async def gerar_relatorio_pdf(tool_context: ToolContext) -> dict[str, str]:
+    """Prepara relatório PDF de vendas fictícias e coloca na fila. Use quando o Pedido
+    solicitar PDF ou arquivo de relatório. Não leia Mensagens nem escreva texto depois:
+    o código publica o estado da geração e a ação de download na Conversa.
+    """
+    return await business_request(tool_context, as_report=True)
+
+
+async def business_request(
+    tool_context: ToolContext, *, as_report: bool
+) -> dict[str, str]:
     client = CURRENT_CHAT_API.get()
     state = tool_context.state
     if client is None or not state.get(context.REQUEST_ID):
@@ -64,6 +80,8 @@ async def consultar_negocio(tool_context: ToolContext) -> dict[str, str]:
             await audit.finish("unavailable", None, elapsed())
             raise RuntimeError("Banco de negócio não configurado.")
         else:
+            if as_report and not settings.report_redis_url:
+                raise RuntimeError("Fila de relatórios não configurada.")
             sql = validate_sql(await plan_query(question))
             rows = await read_query(
                 settings.business_database_url,
@@ -81,9 +99,23 @@ async def consultar_negocio(tool_context: ToolContext) -> dict[str, str]:
                 # Nova redação isolada, só com células; nunca corrige números por interpolação.
                 body = await write_answer(question, rows, strict=True)
                 check_grounding(body, rows)
-            await audit.finish("allowed", sql, elapsed())
-            await client.reply(state[context.REQUEST_ID], body, business_data=True)
-        context.mark_answered(tool_context, "business")
+            if as_report:
+                await audit.finish("queued", sql, elapsed())
+                await save_plan(connection, state[context.REQUEST_ID], body)
+                await client.start_report(state[context.REQUEST_ID])
+                try:
+                    await enqueue_report(
+                        settings.report_redis_url,
+                        state[context.REQUEST_ID],
+                        expires_s=settings.report_request_ttl_seconds,
+                    )
+                except Exception:
+                    await client.fail_report(state[context.REQUEST_ID])
+                    await audit.finish("queue_error", sql, elapsed())
+            else:
+                await audit.finish("allowed", sql, elapsed())
+                await client.reply(state[context.REQUEST_ID], body, business_data=True)
+        context.mark_answered(tool_context, "report" if as_report else "business")
         return {"status": "Resposta já publicada na Conversa."}
     except Exception:
         # A falha da própria auditoria também impede qualquer entrega. Sem mensagens de erro SQL.

@@ -19,7 +19,7 @@ from google.adk.apps import App
 from app.eval_fixtures import fixture_tool_callback
 from app.model import build_model, generation_config
 from app.agent_requests.model_budget import count_model_call
-from app.business.service import consultar_negocio
+from app.business.service import consultar_negocio, gerar_relatorio_pdf
 
 from .instructions import build_instruction
 from .tools import delegar_tarefa, ler_mensagens, perguntar_delegacao, perguntar_recorte
@@ -43,6 +43,7 @@ root_agent = Agent(
         delegar_tarefa,
         perguntar_delegacao,
         consultar_negocio,
+        gerar_relatorio_pdf,
     ],
     before_model_callback=count_model_call,
     # Só age na avaliação, com a Conversa da fixture do caso (app/eval_fixtures.py).

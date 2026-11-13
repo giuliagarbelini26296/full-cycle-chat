@@ -262,6 +262,11 @@ quem clicou e gera uma URL assinada com validade curta. Se o Worker falha, o ped
 é tentado de novo algumas vezes; a entrega com o mesmo identificador de pedido acontece uma vez
 só. Esgotadas as tentativas, o Worker grava na conversa que não conseguiu.
 
+O Worker usa credencial própria, limitada a consultar elegibilidade e finalizar/falhar relatórios
+existentes. Atualiza a Mensagem de início; não aceita texto livre de resposta nem delega Tarefas.
+O plano do relatório fica no Banco dos agentes e a fila carrega só sua referência. Contratos,
+estados, recuperação e retenção: [spec da F14](funcionalidades/14-relatorio-em-pdf/spec.md).
+
 ### 6.6 Delegação de tarefa
 
 Quem pede menciona o agente e a pessoa que vai receber a tarefa. O agente interpreta o pedido e
@@ -297,7 +302,8 @@ Regras que pesam no desenho:
 - Apagar uma mensagem apaga o conteúdo de vez e a tira da conversa; a marca "mensagem apagada" fica
   só para as citações a ela.
 - Os agentes não acessam o Banco do chat: as mensagens de que precisam chegam pela API do chat.
-- A retenção dos PDFs no armazenamento e a da auditoria das consultas estão a definir.
+- A retenção dos PDFs e rascunhos é definida no LLD, "Valores e configuração"; a retenção da
+  auditoria de consultas para operação corporativa segue pendente.
 - Os eventos de reconexão no Redis são temporários; perdê-los só obriga o cliente a recarregar pelo
   histórico.
 

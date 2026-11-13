@@ -5,6 +5,7 @@ import type {
   MentionPayload,
   MessageAuthorPayload,
   QuotePayload,
+  ReportPayload,
 } from 'chat-events';
 import { randomUUIDv7 } from 'node:crypto';
 import { isUUID } from 'class-validator';
@@ -69,6 +70,7 @@ export interface MessageView {
   body: string;
   createdAt: Date;
   businessData?: boolean;
+  report?: ReportPayload | null;
   editedAt: Date | null;
   mentions: MentionView[];
   quote: QuoteView | null;
@@ -300,6 +302,7 @@ export class MessagesService {
     body: string,
     quickReplies: string[] | null = null,
     businessData = false,
+    report: ReportPayload | null = null,
   ): Promise<MessageView> {
     const message = await this.messages.save(
       this.messages.create({
@@ -311,6 +314,7 @@ export class MessagesService {
         quotedMessageId: null,
         quickReplies,
         businessData,
+        report,
       }),
     );
     const [bot] = await this.bots.findByIds([botId]);
@@ -331,6 +335,39 @@ export class MessagesService {
           await this.announceCreated(message, memberIds);
         },
         'Falha ao publicar a Mensagem do bot',
+      ),
+    );
+  }
+
+  async updateReportMessage(
+    messageId: string,
+    status: 'ready' | 'failed',
+  ): Promise<MessageView> {
+    const message = await this.messages.findOneByOrFail({ id: messageId });
+    message.body =
+      status === 'ready'
+        ? 'Seu relatório com dados fictícios está pronto.'
+        : 'Não foi possível gerar o relatório. Faça um novo pedido para tentar novamente.';
+    if (!message.report || !message.businessData)
+      throw new Error('Mensagem de relatório inválida.');
+    message.report = { ...message.report, status };
+    message.editedAt = new Date();
+    await this.messages.save(message);
+    return this.viewById(messageId);
+  }
+
+  publishBotMessageUpdated(message: MessageView): void {
+    this.queueForMessage(
+      message.id,
+      this.toMembers(
+        message.conversationId,
+        async (memberIds) => {
+          await this.publisher.messageUpdated(
+            memberIds,
+            toMessageResponse(message, true),
+          );
+        },
+        'Falha ao publicar o estado do relatório',
       ),
     );
   }
@@ -1104,6 +1141,7 @@ function toView(
     // As rotas só devolvem Mensagens vivas, com texto (spec da F06, "Histórico").
     body: message.body ?? '',
     businessData: message.businessData,
+    report: message.report,
     createdAt: message.createdAt,
     editedAt: message.editedAt ?? null,
     mentions,

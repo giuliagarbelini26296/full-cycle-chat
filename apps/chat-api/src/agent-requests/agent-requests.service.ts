@@ -2,7 +2,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { Injectable } from '@nestjs/common';
 import { isUUID } from 'class-validator';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import {
   AgentRequest,
   type AgentRequestClosedStatus,
@@ -109,6 +109,18 @@ export class AgentRequestsService {
   // já não está digitando (LLD, "Digitando").
   hasAnswer(requestId: string): Promise<boolean> {
     return this.actions.existsBy({ requestId });
+  }
+
+  async extendForReport(id: string, expiresAt: Date): Promise<void> {
+    await this.requests.update({ id }, { expiresAt });
+  }
+
+  isOpenForReport(id: string): Promise<boolean> {
+    return this.requests.existsBy({
+      id,
+      status: 'open',
+      expiresAt: MoreThan(new Date()),
+    });
   }
 
   async recordAction(

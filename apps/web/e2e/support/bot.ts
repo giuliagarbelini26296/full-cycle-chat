@@ -35,9 +35,9 @@ export async function botTyping(requestId: string): Promise<void> {
 // Um Pedido para o bot, criado pela rota de envio da API do chat como a Pessoa logada na página, com o
 // `agent_username` que o BFF preencheria. Sem passar pelo BFF, o Serviço de agentes não recebe o
 // Pedido, e só o bot do teste age nele. Devolve o id do Pedido.
-export async function requestByApi(page: Page, conversationId: string, agentUsername: string): Promise<string> {
+export async function requestByApi(page: Page, conversationId: string, agentUsername: string, body = `@${agentUsername} resume hoje`): Promise<string> {
   const { agent_request } = await postMessageByApi<{ agent_request: { id: string } }>(page, conversationId, {
-    body: `@${agentUsername} resume hoje`,
+    body,
     agent_username: agentUsername,
   });
   return agent_request.id;

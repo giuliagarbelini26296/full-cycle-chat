@@ -77,14 +77,14 @@ docs/             HLD, LLD, ADRs, brief
 | Gerenciador do projeto Python | uv | O `agents-cli` gera e opera o projeto com uv (install, lint, eval) |
 | Avaliação dos agentes | `adk eval` do ADK, com um evalset e um `test_config.json` por agente em `tests/eval/<agente>/`, e o juiz LLM pelo Google AI Studio | O `agents-cli eval grade` exige credencial padrão do Google Cloud (ADC) mesmo com métrica local, e o projeto não usa o Google Cloud; os critérios que delegam ao Vertex (`safety_v1`, `multi_turn_*`) ficam de fora |
 | Sessões do ADK | `DatabaseSessionService` do ADK no Banco dos agentes, pela variável `SESSION_SERVICE_URI` (driver asyncpg) | O ADK cria e mantém as tabelas de sessão; sem a variável, as sessões ficam em memória |
-| Fila de pedidos demorados | A definir | — |
+| Fila de pedidos demorados | ARQ/Redis, serialização JSON; versão resolvida no `uv.lock`, validada com o cliente Redis existente | Job contém só o identificador; plano privado no Banco dos agentes, sem SQL/rascunho em logs da fila ([spec da F14](funcionalidades/14-relatorio-em-pdf/spec.md)) |
 | Acesso ao modelo, trocável por configuração (HLD, seção 2) | A variável `AGENT_MODEL`: um valor começando com `gemini`, sem barra, usa o Gemini nativo do ADK e precisa ser um modelo que aceita o nível de raciocínio mínimo do `teto de custo por pedido` (o `gemini-3.6-flash`, padrão do ambiente, aceita; o `gemini-3.8-flash` e os anteriores ao Gemini 3 o recusam, e com eles todo Pedido falha); `openai/<modelo>` e `anthropic/<modelo>` usam o `LiteLlm` (`litellm>=1.84`); outro valor faz a configuração falhar com `AGENT_MODEL`. Todo agente pega o modelo do `build_model()` de `app/model.py`, `existe` ([spec da F11](funcionalidades/11-resumo-de-conversa-pelo-agente/spec.md), seção "Modelo de IA") | O caminho principal fica nativo e com as tentativas do ADK; no Python, OpenAI e Anthropic só existem pelo `LiteLlm`; descartado: `LiteLlm` para os três |
 | Cliente do Redis no Serviço de agentes | `redis` (redis-py), pelo `redis.asyncio`, `existe` (spec da F11, seção "Rota de Pedido") | O limite de pedidos por pessoa; cliente oficial do Redis, assíncrono como o app HTTP |
-| Geração do PDF | A definir | — |
+| Geração do PDF | ReportLab, com texto escapado e tabelas paginadas; `app/reports/pdf.py` | Layout previsível e sem navegador ou recursos remotos no Worker |
 | Acesso ao Banco dos agentes e migrações | SQLAlchemy assíncrono (Core), com asyncpg, e Alembic; o `env.py` do Alembic ignora as tabelas de sessão do ADK | O ADK já usa SQLAlchemy com asyncpg nas sessões, e o Alembic dá dono ao schema desse banco; descartado: SQL cru com arquivos `.sql` numerados |
 | Validação das variáveis de ambiente | zod, com `@nestjs/config` na API do chat; `pydantic-settings` no projeto `agents` | Valida e tipa numa peça só em cada projeto |
 | Validação de entrada na API do chat | `class-validator` e `class-transformer`, no `ValidationPipe` do Nest | Caminho padrão do Nest, e o `@nestjs/swagger` lê os mesmos decorators para gerar o snapshot OpenAPI; descartado: zod com `nestjs-zod` |
-| Parser da conferência de somente leitura | A definir | — |
+| Parser da conferência de somente leitura | SQLGlot, PostgreSQL, com resolução de escopos de CTE/subconsultas; `app/business/query.py` | Tabelas físicas qualificadas no schema permitido; resolução de funções somente em `pg_catalog` |
 | Log estruturado | A definir | — |
 
 ## 2. Componentes e dependências
@@ -364,7 +364,7 @@ exigem estão em "Conceitos transversais de implementação", seção "Concorrê
 | Chat | Tarefas | existe (`tasks`): spec da F12, seção "Tarefa"; Notificações de Tarefa gravadas (`task_notifications`) ([ADR 0029](adr/0029-notificacoes-de-tarefa-gravadas.md)), existe: spec da F12, seções "Tarefa" e "Atividade" |
 | Chat | Pedidos aos agentes e ações de bot | existe (`agent_requests`, `bot_actions`): spec da F11, seção "Pedido e ações de bot" |
 | Chat | Perguntas pendentes | existe (`pending_questions`): spec da F11, seção "Envio e Pergunta pendente" |
-| Chat | Referência ao PDF de uma mensagem | a detalhar |
+| Chat | Referência ao PDF de uma mensagem | existe: `reports` e `messages.report`, migrations da API e [spec da F14](funcionalidades/14-relatorio-em-pdf/spec.md) |
 | Agentes | Registro de agentes conectados | existe (`connected_agents`): a linha existe enquanto o agente está conectado ([spec da F10](funcionalidades/10-conexao-de-agentes/spec.md), seção "Registro de Agentes") |
 | Agentes | Sessões do ADK | existe: criadas pelo ADK no banco `agents` ("Estrutura do código", "Sessões do ADK") |
 | Negócio | Dados de vendas | dono: script de carga |
@@ -661,9 +661,10 @@ continua `open` no banco, mas recusa as ações do bot.
 
 | Job | Disparo | O que faz | Na falha | Situação |
 | --- | --- | --- | --- | --- |
-| Relatório em PDF (Worker) | Pedido na fila (HLD 6.5) | HLD 6.5 | Nova tentativa até `tentativas do Worker`; esgotadas, grava "não consegui" (HLD 6.5) | a detalhar |
+| Relatório em PDF (Worker) | Pedido na fila (HLD 6.5) | HLD 6.5 | Nova tentativa até `tentativas do Worker`; esgotadas, atualiza a Mensagem com falha | existe: `app/reports/worker.py` e `worker_main.py` |
 
-A idempotência do job (chave no S3 e entrega única) e a retenção dos PDFs estão a definir.
+O job, o objeto e a Mensagem usam o Pedido como referência idempotente; estados e recuperação
+estão na [spec da F14](funcionalidades/14-relatorio-em-pdf/spec.md). A retenção segue "Valores e configuração".
 Perguntas pendentes vencidas não têm rotina: o `expires_at` é conferido na leitura ("Estados e
 regras", seção "Pedido ao agente e Pergunta pendente"). Sessões vencidas não têm rotina: são apagadas
 quando apresentadas ("Estados e regras", seção "Sessão e login") e pela operação
@@ -769,15 +770,17 @@ telas logadas, que corrigem o cookie (spec da F09, seção "Cliente", "Tema").
 | Limite de pedidos por pessoa | 10 por minuto, em janela fixa, somando todas as Conversas (brief, RNF "Custo") | Serviço de agentes | Variável `AGENT_REQUESTS_PER_MINUTE`, padrão 10 |
 | Teto de custo por pedido | 4 chamadas ao modelo por Pedido e 1024 tokens de saída por chamada, contando o raciocínio, que fica no nível mínimo (`ThinkingLevel.MINIMAL`; sem nível, o raciocínio cortava a resposta na avaliação da F11-T08, e no nível baixo ainda cortava 11 de 20 resumos de 500 Mensagens na medição dela; o modelo precisa aceitar o nível, "Acesso ao modelo", e no `LiteLlm` ele vira o esforço de raciocínio do provedor), mais o `teto de Mensagens do resumo` na entrada; o limite em dólar do brief é conferido na avaliação e na medição, e não em tempo real (spec da F11) | Serviço de agentes | Constante |
 | Teto de Mensagens do resumo | 500: as mais recentes do Recorte (PRD da F11) | API do chat (rotas do bot) | Constante |
-| Tentativas do Worker | A definir | Worker | A definir |
-| Validade da URL do PDF | A definir | API do chat | A definir |
+| Tentativas do Worker | 3 | Worker | `REPORT_MAX_TRIES`, em `app/reports/config.py` |
+| Prazo do job de relatório | 120 s, com reserva interna para registrar/avisar falha | Worker | `REPORT_JOB_TIMEOUT_S` |
+| Validade da URL do PDF | 60 s; assinatura já emitida vale até vencer, mesmo após revogação | API do chat | `REPORT_DOWNLOAD_TTL_SECONDS`, no schema da API |
+| Retenção de arquivo e rascunho do PDF | 24 h, com limpeza periódica restrita ao prefixo próprio; auditoria separada | Worker e API | `REPORT_RETENTION_SECONDS`, nos schemas dos dois processos |
 | Duração da Sessão | 30 dias sem uso (PRD da F01, história 3) | API do chat | Variável `SESSION_TTL_DAYS`, padrão 30 |
 | Intervalo de renovação da Sessão | 1 dia | API do chat | Constante |
 | Validade do cookie de sessão | 400 dias, o teto do Chrome | BFF | Constante |
 | Tentativas de login | 5 (PRD da F01, história 2) | API do chat | Constante |
 | Janela de tentativas de login | 15 min (PRD da F01, história 2) | API do chat | Constante |
 | Bloqueio do login | 15 min (PRD da F01, história 2) | API do chat | Constante |
-| Validade do identificador de pedido | 2 min no Pedido comum (spec da F11); a do Pedido demorado, a definir na F14 | API do chat | Constante |
+| Validade do identificador de pedido | 2 min no Pedido comum (spec da F11); 30 min no relatório, estendido na abertura | API do chat | Comum: constante; relatório: `REPORT_REQUEST_TTL_SECONDS` |
 | Validade da Pergunta pendente | 1 h (PRD da F11) | API do chat; a web desativa pelo `expires_at` do payload, sem constante própria | Constante |
 | Retenção dos eventos de reconexão | 5 min (PRD da F03, história 5) | API do chat (Redis) | Constante |
 | Intervalo de reconferência da Sessão no WebSocket | 60 s (spec da F03) | API do chat | Constante |

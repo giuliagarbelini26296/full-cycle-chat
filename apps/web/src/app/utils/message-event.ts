@@ -22,6 +22,7 @@ export function messageFromEvent(payload: MessagePayload): Message {
     editedAt: payload.edited_at ?? null,
     mentions: payload.mentions ?? [],
     quote: payload.quote ?? null,
+    ...(payload.report !== undefined ? {report:payload.report} : {}),
     // O evento guardado antes da F11-T07 não traz as Respostas prontas.
     quickReplies: payload.quick_replies
       ? {

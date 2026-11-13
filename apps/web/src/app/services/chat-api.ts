@@ -246,7 +246,17 @@ export type Message = {
   quote: Quote | null;
   // As Respostas prontas da pergunta do Agente, ou nulas (spec da F11, "Envio e Pergunta pendente").
   quickReplies: QuickReplies | null;
+  report?: import('chat-events').ReportPayload | null;
 };
+
+export async function getReportDownload(token: string, id: string): Promise<{kind:'ok';url:string} | {kind:'unauthenticated'|'forbidden'|'not_found'|'not_ready'|'failure'}> {
+  const response = await request(`/v1/reports/${encodeURIComponent(id)}/download`,{method:'GET',headers:authenticated(token)});
+  if (response?.status === 200) {
+    const data = await jsonBody<{url:string}>(response);
+    if (data && typeof data.url === 'string' && /^https?:\/\//.test(data.url)) return {kind:'ok',url:data.url};
+  }
+  return {kind:response?.status === 401 ? 'unauthenticated' : response?.status === 403 ? 'forbidden' : response?.status === 404 ? 'not_found' : response?.status === 409 ? 'not_ready' : 'failure'};
+}
 
 // Os botões da pergunta do Agente: os rótulos, quem pode responder, até quando e se já se encerrou.
 export type QuickReplies = {

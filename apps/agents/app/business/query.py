@@ -8,6 +8,7 @@ from typing import Any
 import asyncpg
 import sqlglot
 from sqlglot import exp
+from sqlglot.optimizer.scope import traverse_scope
 
 TABLES = frozenset({"customers", "sellers", "orders"})
 FUNCTIONS = frozenset(
@@ -78,7 +79,6 @@ def validate_sql(sql: str) -> str:
     if len(statements) != 1 or not isinstance(statements[0], exp.Select):
         raise UnsafeQuery("Apenas um SELECT é permitido.")
     tree = statements[0]
-    ctes = {cte.alias for cte in tree.find_all(exp.CTE)}
     for node in tree.walk():
         if isinstance(
             node,
@@ -94,13 +94,6 @@ def validate_sql(sql: str) -> str:
             ),
         ):
             raise UnsafeQuery("Operação não permitida.")
-        if isinstance(node, exp.Table):
-            if (
-                node.catalog
-                or node.db not in ("", "public")
-                or node.name not in TABLES | ctes
-            ):
-                raise UnsafeQuery("Tabela não permitida.")
         if isinstance(node, exp.Func):
             name = (
                 node.name.upper()
@@ -114,9 +107,28 @@ def validate_sql(sql: str) -> str:
             and str(getattr(node.this, "value", node.this)) not in CAST_TYPES
         ):
             raise UnsafeQuery("Conversão de tipo não permitida.")
-    if not list(tree.find_all(exp.Table)):
+    physical_tables = []
+    try:
+        # Resolve o escopo: uma CTE interna não autoriza uma tabela física homônima fora dela.
+        for scope in traverse_scope(tree):
+            for source in scope.sources.values():
+                if isinstance(source, exp.Table):
+                    if (
+                        source.catalog
+                        or source.db not in ("", "public")
+                        or source.name not in TABLES
+                    ):
+                        raise UnsafeQuery("Tabela não permitida.")
+                    physical_tables.append(source)
+    except sqlglot.errors.SqlglotError as error:
+        raise UnsafeQuery("Escopo SQL inválido.") from error
+    if not physical_tables:
         raise UnsafeQuery("Consulte uma tabela de negócio.")
-    return tree.sql(dialect="postgres", unsupported_level=sqlglot.ErrorLevel.RAISE)
+    for table in physical_tables:
+        table.set("db", exp.to_identifier("public"))
+    return tree.sql(
+        dialect="postgres", comments=False, unsupported_level=sqlglot.ErrorLevel.RAISE
+    )
 
 
 async def read_query(
@@ -130,7 +142,7 @@ async def read_query(
             timeout=timeout_s,
             server_settings={
                 "application_name": "business_readonly",
-                "search_path": "pg_catalog,public",
+                "search_path": "pg_catalog",
             },
         )
         try:

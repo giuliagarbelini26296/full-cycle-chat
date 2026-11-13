@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { AgentAvatar } from "@/app/components/agent/agent-avatar";
 import { AgentTag } from "@/app/components/agent/agent-tag";
 import { AgentText } from "@/app/components/agent/agent-text";
+import { ReportAttachment } from '@/app/components/agent/report-attachment';
 import { OpenAgentsButton } from "@/app/components/agent/open-agents-button";
 import { QuickReplies } from "@/app/components/agent/quick-replies";
 import { OpenProfileButton } from "@/app/components/profile/open-profile-button";
@@ -124,6 +125,7 @@ export function MessageItem({
         // da F11, "Cliente").
         <>
           <AgentText text={message.body} />
+          {message.report && <ReportAttachment report={message.report} />}
           {message.quickReplies && message.quickReplies.options.length > 0 && (
             <QuickReplies
               quickReplies={message.quickReplies}

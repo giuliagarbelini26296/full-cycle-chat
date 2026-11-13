@@ -8,4 +8,8 @@ GET autenticado para obter download verifica participação, permissão atual e 
 
 O rascunho pode ficar sem lastro se a base mudar entre a preparação e a execução. Nesse caso o Worker não inventa atualização: tenta novamente até o limite e registra falha. Auditoria acompanha cada execução sem resultados. Conta sem permissão não enfileira. Exemplos, banco e PDF são fictícios e identificados.
 
+O job carrega somente o Pedido, em JSON; o Worker busca SQL conferido e rascunho na base privada dos agentes. Planos e tentativas têm migração própria. A limpeza remove o rascunho e o objeto após a retenção, preservando a auditoria separada. `housekeeping` verifica expiração e limpeza periodicamente e na subida. Na indisponibilidade da API, repete no próximo ciclo. Uma interrupção antes do enfileiramento é coberta pela expiração do relatório.
+
+A Mensagem de início é atualizada em vez de criar outra na conclusão; `messages.report` é a projeção materializada do estado, atualizada na mesma transação. A interface usa os componentes/tokens já aprovados e uma ação tipada, independente de texto do modelo. Credencial de Worker não é aceita nas ações genéricas de bot. Assinatura já emitida permanece utilizável até seu vencimento curto; revogação bloqueia a emissão de novos links.
+
 Testes: job real em Redis, storage compatível S3, redelivery idempotente, falha/retentativa, bloqueio de download, URL vencida, PDF extraído/renderizado e fluxo pelo navegador com duas Pessoas. Nenhum teste usa dados Microsoft.

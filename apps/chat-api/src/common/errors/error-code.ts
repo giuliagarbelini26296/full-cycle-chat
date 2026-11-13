@@ -12,6 +12,10 @@ export type ErrorCode =
   | 'message_not_owned'
   | 'forbidden'
   | 'data_access_denied'
+  | 'report_not_found'
+  | 'report_not_ready'
+  | 'reports_unavailable'
+  | 'invalid_worker_token'
   | 'quoted_message_not_found'
   | 'not_found'
   | 'payload_too_large'
@@ -41,6 +45,10 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   message_not_owned: 403,
   forbidden: 403,
   data_access_denied: 403,
+  report_not_found: 404,
+  report_not_ready: 409,
+  reports_unavailable: 503,
+  invalid_worker_token: 401,
   quoted_message_not_found: 404,
   not_found: 404,
   payload_too_large: 413,

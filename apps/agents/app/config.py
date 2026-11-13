@@ -90,6 +90,8 @@ class Settings(ModelSettings):
     business_database_url: str | None = None
     business_query_timeout_s: PositiveFloat = 3
     business_query_max_rows: PositiveInt = 100
+    report_redis_url: str | None = None
+    report_request_ttl_seconds: PositiveInt = 1800
     # Lidas também pelo código gerado (app_utils/services.py e fast_api_app.py).
     session_service_uri: str | None = None
     allow_origins: str | None = None
