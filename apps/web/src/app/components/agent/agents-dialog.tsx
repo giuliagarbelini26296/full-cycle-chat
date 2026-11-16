@@ -1,7 +1,7 @@
 "use client";
 
 import { Bot } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { connectAgent } from "@/app/actions/agent-connection";
@@ -52,6 +52,7 @@ export function AgentsDialog({
 }: AgentsDialogProps) {
   const { agents, error, reload } = useAgents();
   const [isRevalidated, setIsRevalidated] = useState(false);
+  const [disconnecting, setDisconnecting] = useState<Agent | null>(null);
 
   const finishReload = useCallback(
     () =>
@@ -76,6 +77,7 @@ export function AgentsDialog({
       title="Agentes"
       description={isAdmin ? ADMIN_DESCRIPTION : MEMBER_DESCRIPTION}
       onCloseAutoFocus={onCloseAutoFocus}
+      dismissible={!isAdmin || disconnecting === null}
     >
       <DialogBody>
         {isRevalidated && error ? (
@@ -101,7 +103,12 @@ export function AgentsDialog({
             description="Quando o administrador publicar agentes, eles aparecem aqui para conectar."
           />
         ) : isAdmin ? (
-          <AdminView agents={agents} onChanged={finishReload} />
+          <AdminView
+            agents={agents}
+            onChanged={finishReload}
+            disconnecting={disconnecting}
+            onDisconnectingChange={setDisconnecting}
+          />
         ) : (
           <MemberView agents={agents} personId={personId} onPersonSelect={onPersonSelect} />
         )}
@@ -112,9 +119,14 @@ export function AgentsDialog({
 
 // A visão do administrador: cada Agente com "Conectar" ou "Desconectar". Conectar passa a linha a
 // "Conectando", sem aceitar outro clique, e relê a lista no sucesso; Desconectar pede confirmação.
-function AdminView({ agents, onChanged }: { agents: Agent[]; onChanged: () => Promise<unknown> }) {
+function AdminView({ agents, onChanged, disconnecting, onDisconnectingChange }: {
+  agents: Agent[];
+  onChanged: () => Promise<unknown>;
+  disconnecting: Agent | null;
+  onDisconnectingChange: (agent: Agent | null) => void;
+}) {
   const [connecting, setConnecting] = useState<string | null>(null);
-  const [disconnecting, setDisconnecting] = useState<Agent | null>(null);
+  const disconnectTrigger = useRef<HTMLButtonElement | null>(null);
   // O Agente desconectado agora: o botão que abriu a confirmação sumiu, e o foco vai para o
   // "Conectar" da mesma linha.
   const [disconnected, setDisconnected] = useState<string | null>(null);
@@ -153,7 +165,10 @@ function AdminView({ agents, onChanged }: { agents: Agent[]; onChanged: () => Pr
                   size="sm"
                   className="shrink-0"
                   data-agent-action={agent.slug}
-                  onClick={() => setDisconnecting(agent)}
+                  onClick={(event) => {
+                    disconnectTrigger.current = event.currentTarget;
+                    onDisconnectingChange(agent);
+                  }}
                 >
                   Desconectar
                 </Button>
@@ -176,15 +191,21 @@ function AdminView({ agents, onChanged }: { agents: Agent[]; onChanged: () => Pr
       </ul>
       <DisconnectAgentDialog
         agent={disconnecting}
-        onClose={() => setDisconnecting(null)}
+        onClose={() => onDisconnectingChange(null)}
         onDisconnected={async (agent) => {
           setDisconnected(agent.slug);
           await onChanged();
         }}
         onCloseAutoFocus={(event) => {
-          if (!disconnected) return;
+          // A confirmação controlada não usa AlertDialog.Trigger: o Radix não
+          // conhece o botão de retorno. Restaure-o também ao cancelar por Esc.
           event.preventDefault();
-          document.querySelector<HTMLElement>(`[data-agent-action="${disconnected}"]`)?.focus();
+          if (disconnected) {
+            document.querySelector<HTMLElement>(`[data-agent-action="${disconnected}"]`)?.focus();
+          } else {
+            disconnectTrigger.current?.focus();
+          }
+          disconnectTrigger.current = null;
           setDisconnected(null);
         }}
       />

@@ -39,6 +39,14 @@ export function ConfirmDialog({
         <AlertDialog.Overlay className="fixed inset-0 z-50 animate-fade-in bg-surface-overlay" />
         <AlertDialog.Content
           onCloseAutoFocus={onCloseAutoFocus}
+          onKeyDownCapture={(event) => {
+            if (event.key !== "Escape") return;
+            // O foco pode chegar antes de o listener global da camada ser
+            // registrado. A confirmação trata Esc desde a primeira tecla.
+            event.preventDefault();
+            event.stopPropagation();
+            if (!isConfirming) onOpenChange(false);
+          }}
           className="fixed left-1/2 top-1/2 z-50 flex w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 -translate-y-1/2 animate-pop-in flex-col gap-4 rounded-card bg-surface-raised p-6 shadow-3 outline-none"
         >
           <div className="flex flex-col gap-1">

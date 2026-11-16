@@ -30,3 +30,7 @@ A rodada com dois processos terminou com 286 aprovações, quatro falhas e sete 
 Restam falhas em fluxos existentes: o cancelamento por Escape da confirmação de desconectar um Agente falhou em uma de três repetições isoladas; o contador da aba Tarefas após uma delegação falhou em duas de três. Nessas falhas, a confirmação não retornou ao botão esperado ou o contador não chegou ao valor esperado, respectivamente. As causas de produção ainda não foram demonstradas; não alterar os testes para ignorá-las. Logs: `.local/browser-other-regressions.log` e `.local/browser-review-stable.log`. As correções desta revisão não alteraram componentes de produção. A regressão completa continua sem aprovação.
 
 Resultado da revisão: consulta real e componentes locais de segurança/geração aprovados; liberação da funcionalidade completa permanece pendente dos pontos acima. Não atualizar o status da tarefa ou o roadmap para concluído.
+
+## Atualização de 16/11/2026
+
+A instabilidade ao cancelar a desconexão de um Agente foi corrigida no código de produção e verificada com 20 cenários repetidos, incluindo 60 cancelamentos nos dois temas. O registro está em `docs/funcionalidades/10-conexao-de-agentes/tarefas/07-desconectar-um-agente/correcao-cancelamento.md`. A pendência desse fluxo está resolvida no ambiente isolado. Permanecem separadas a atualização do contador de Tarefas e a validação completa de PDF com IA. O piloto público não foi atualizado.
