@@ -1,7 +1,7 @@
 // spec: e2e/plano-de-testes-f06.md
 // seed: e2e/seed.spec.ts
 import { expect, test } from "../fixtures";
-import { composer, messageItem, readyHistory } from "../support/conversation-page";
+import { composer, messageItem, messageList, readyHistory } from "../support/conversation-page";
 import { insertMessages, setLastRead, softDeleteMessage } from "../support/database";
 
 test.describe("Ir até a Mensagem citada", () => {
@@ -35,7 +35,7 @@ test.describe("Ir até a Mensagem citada", () => {
     await citacao.focus();
     await page.keyboard.press("Enter");
 
-    const alvo = page.locator(`[data-message-id="${original.id}"]`);
+    const alvo = messageList(page, sharedChannel.name).locator(`[data-message-id="${original.id}"]`);
     await expect(alvo).toBeInViewport();
     await expect(alvo.locator("[data-highlighted]")).toBeVisible();
     await expect(alvo.locator("[data-highlighted]")).toHaveCount(0, { timeout: 5_000 });
@@ -81,12 +81,17 @@ test.describe("Ir até a Mensagem citada", () => {
       .click();
     await expect(page.getByRole("status").filter({ hasText: "Indo até a mensagem…" })).toBeVisible();
     const caixa = composer(otherPage, sharedChannel.name);
-    await caixa.fill("Chegou durante a ida");
-    await caixa.press("Enter");
-
-    const alvo = page.locator(`[data-message-id="${original.id}"]`);
-    await expect(alvo).toBeInViewport({ timeout: 15_000 });
-    await expect(alvo.locator("[data-highlighted]")).toBeVisible();
+    const alvo = messageList(page, sharedChannel.name).locator(`[data-message-id="${original.id}"]`);
+    // O destaque dura 2 s. Observe-o enquanto a outra aba envia a Mensagem;
+    // esperar primeiro pelo envio e depois por outra asserção de viewport podia
+    // consumir toda a janela antes de começar a verificar o destaque.
+    await Promise.all([
+      expect(alvo.locator("[data-highlighted]")).toBeInViewport({ timeout: 15_000 }),
+      (async () => {
+        await caixa.fill("Chegou durante a ida");
+        await caixa.press("Enter");
+      })(),
+    ]);
     await expect(page.getByRole("status").filter({ hasText: "Indo até a mensagem…" })).toHaveCount(0);
     expect(limits.length).toBeGreaterThan(0);
     expect(limits.every((limit) => limit === "100")).toBe(true);

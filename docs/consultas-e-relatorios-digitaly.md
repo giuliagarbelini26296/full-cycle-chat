@@ -61,12 +61,20 @@ Para usar o PDF no domínio público, será necessário configurar o endpoint p�
 
 ```sh
 docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run pytest tests/unit
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run pytest tests/integration/test_report_worker.py tests/integration/test_business.py -k 'not modelo'
+docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run pytest tests/integration/test_report_worker.py tests/integration/test_business_guards.py tests/integration/test_business.py::test_receita_e_clientes_na_base_ficticia tests/integration/test_business.py::test_papel_nao_escreve_nem_cria_objetos_ou_le_outros_bancos
 docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec chat-api pnpm test:e2e --runInBand reports business-data
 docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=chromium agentes/relatorio-pdf.spec.ts
 ```
 
 Não rode duas suítes da API simultaneamente: ambas recriam `chat_test`. Também não rode dois Playwrights no mesmo diretório de resultados. A suíte real do agente e o projeto `modelo-real` do navegador precisam da cota disponível.
+
+No Mac, a regressão sem IA pode rodar com menos processos para reduzir a pressão do navegador:
+
+```sh
+docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=chromium --project=canais-publicos --workers=2
+```
+
+Depois de compilar uma nova versão, reinicie os processos que usam a compilação antes dos testes de navegador. Um servidor ainda executando o build anterior pode servir arquivos incompatíveis com os novos arquivos estáticos.
 
 O exemplo exportável é criado pelo comando abaixo, usando uma referência fictícia conferida contra o banco. Ele serve como artefato/fixture de validação, não como resposta de IA em produção:
 
@@ -75,3 +83,17 @@ docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compo
 ```
 
 Resultado em `output/pdf/relatorio-digitaly-demonstracao.pdf`. Para testar a rotina de Operações e Delivery, veja [o roteiro fictício](piloto-operacoes-delivery.md).
+
+## Validação do PDF com IA real
+
+Com os servidores atualizados e o Worker ativo, execute primeiro o caso do PDF, antes de gastar a cota com a regressão geral:
+
+```sh
+docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=modelo-real agentes/relatorio-pdf-real.spec.ts --workers=1
+```
+
+Esse teste envia o pedido pela interface, sem simular a resposta do modelo, o enfileiramento ou a entrega do Worker. Confere o arquivo PDF baixado, a persistência após recarregar e a ocultação para uma Pessoa sem acesso. A suíte de integração do Worker confere o conteúdo numérico extraído do PDF; o caso de navegador não substitui essa conferência.
+
+A chave precisa estar carregada no processo do Serviço de agentes. Nesta cópia isolada, o arquivo ignorado `.local/model.override.yaml` aponta para a chave já salva na cópia original; ao recriar o serviço, inclua esse arquivo com `-f .local/model.override.yaml`. Não exiba nem copie a chave para os registros de validação. O Worker continua sem chave de IA.
+
+Em 15/11/2026, a consulta real passou, mas a regressão atingiu os limites gratuitos do provedor (5 chamadas por minuto e 20 por dia). O teste completo de PDF recebeu a falha do provedor antes de gerar o arquivo e permanece pendente. Uma execução integral da regressão pode exigir distribuir os casos entre janelas de cota; renovar a cota não torna a suíte inteira automaticamente validada. Não há troca automática de plano ou provedor.

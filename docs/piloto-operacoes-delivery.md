@@ -2,7 +2,17 @@
 
 Este roteiro prepara a demonstração para o diretor de Operações e Delivery. As mensagens são inventadas; não foram recebidas por Teams ou Outlook. Devem ser inseridas manualmente num Canal de teste. Não importar documentos corporativos antes da aprovação do ambiente.
 
-## Pedidos recebidos
+## Como experimentar sem Microsoft
+
+O piloto aceita o texto como mensagem; ainda não oferece upload de DOCX/PDF ou sincronização com Microsoft. Abra o canal `demo-operacoes-delivery`, cole o conteúdo de `docs/exemplos/operacoes-delivery-ficticio.txt` no campo de mensagem e envie. O arquivo contém somente dados inventados e pode ser reutilizado.
+
+Em seguida, envie:
+
+> @assistente resuma a conversa de hoje com o contexto inteiro da reunião fictícia, pedidos recebidos, decisões, bloqueios, entregas em risco, atrasos confirmados e próximos passos com responsável e prazo. Use 13/11/2026 como referência do exemplo e não invente informações ausentes.
+
+Conferência humana: a exportação está em risco, sem atraso confirmado nem nova data; o checklist de Diego está atrasado; Carla depende do ambiente e não recebeu prazo. O resumo deve preservar a cobrança do fornecedor por Bruno e a confirmação de escopo por Ana até 16/11. Esse teste não cria tarefas nem comprova acompanhamento automático de prazos.
+
+## Mensagens curtas alternativas
 
 Mensagem de Ana:
 
@@ -30,3 +40,11 @@ Os próximos passos acima são referências para conferência humana, não respo
 ## Ajustar com o diretor
 
 Validar o vocabulário que ele prefere, o nível de detalhe e quais pontos merecem destaque. Depois ajustar as instruções do assistente e repetir os mesmos exemplos para comparar as respostas. Prazos ficam no texto das Tarefas nesta etapa; acompanhamento automático de atrasos e leitura contínua de Teams/Outlook exigem trabalho adicional após a autorização da empresa.
+
+## Resultado do teste manual de 13/11/2026
+
+Executado no piloto público, canal `demo-operacoes-delivery`, conversa `01a1d767-b6cc-7d14-81ac-1e18f5bd003b`. A conta de teste inseriu o e-mail e a transcrição fictícios como uma mensagem e solicitou o resumo de hoje. O assistente retornou o contexto, o pedido, a ausência de nova data, o bloqueio pelo fornecedor, a exportação em risco, o checklist de Diego atrasado e os próximos passos de Ana, Bruno e Carla. Preservou a falta de prazo de Carla. Conferência visual aprovada para esse exemplo.
+
+O primeiro pedido, iniciado por “organize”, retornou a orientação de capacidades do assistente. O comando “resuma a conversa de hoje” acionou o fluxo corretamente; por isso é o comando recomendado acima. Não foi criada uma função de upload nem um novo classificador de pedidos nesta etapa.
+
+Essa chamada de resumo à IA concluiu com sucesso; isso não comprova a recuperação de toda a cota nem a validação pendente das consultas e PDFs na versão em desenvolvimento. Não houve leitura de Microsoft nem importação de dados corporativos.

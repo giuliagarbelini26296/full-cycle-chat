@@ -1,0 +1,15 @@
+DEMONSTRAÇÃO — DADOS INTEIRAMENTE FICTÍCIOS
+Importação manual de e-mail e transcrição; não recebidos por Teams ou Outlook.
+Data de referência: 13/11/2026.
+
+E-MAIL SIMULADO — 13/11/2026
+Ana: O Cliente Aurora solicitou exportação do relatório de entregas. Preciso confirmar o escopo e devolver uma previsão até 16/11/2026. Bruno analisará o esforço.
+
+TRANSCRIÇÃO SIMULADA — Alinhamento de Operações e Delivery, 13/11/2026
+Ana: O pedido é a exportação do relatório. Vou confirmar o escopo com o cliente até 16/11.
+Bruno: A entrega combinada é 17/11. Dependemos da liberação do ambiente de homologação pelo fornecedor. Ainda não liberaram. Vou cobrar uma posição hoje. Há risco de atraso, mas nenhum atraso confirmado.
+Carla: Assim que o ambiente estiver disponível, preparo o roteiro de validação. Minha ação depende dessa liberação e ainda não tem prazo definido.
+Ana: Não combinamos uma nova data de entrega. Vamos revisar a previsão no próximo alinhamento.
+
+REGISTRO SIMULADO DE OUTRA ENTREGA
+O envio do checklist interno estava previsto para 12/11/2026 e não foi concluído até 13/11/2026. Responsável: Diego. Este item está atrasado. Não foi informada uma nova previsão.

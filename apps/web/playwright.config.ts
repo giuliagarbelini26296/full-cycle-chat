@@ -23,7 +23,20 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: "**/canais-publicos/**",
+      testIgnore: [
+        "**/canais-publicos/**",
+        "**/agentes/delegar-tarefa.spec.ts",
+        "**/agentes/relatorio-pdf-real.spec.ts",
+      ],
+    },
+    // Estes casos chamam o provedor real e precisam da chave no Serviço de agentes.
+    // Os demais cenários usam fixtures e podem rodar sem consumir o modelo.
+    {
+      name: "modelo-real",
+      testMatch: [
+        "**/agentes/delegar-tarefa.spec.ts",
+        "**/agentes/relatorio-pdf-real.spec.ts",
+      ],
     },
     // Criar um Canal público pela tela inclui todas as Pessoas do banco de desenvolvimento, e os
     // testes do projeto principal contam com Pessoas fora de qualquer Canal (Home vazia, primeiro
