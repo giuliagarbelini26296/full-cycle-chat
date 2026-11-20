@@ -1,3 +1,26 @@
+> ## Sobre este fork
+>
+> **Este repositório é um fork de [devfullcycle/imersao-ia1](https://github.com/devfullcycle/imersao-ia1).** O projeto foi criado por **Full Cycle e Luiz Carlos** na Imersão IA da Full Cycle, com licença MIT (ver [LICENSE](LICENSE), mantida sem alterações). Tudo o que está abaixo desta caixa é o README original do curso.
+>
+> **Minhas contribuições** (Giulia Garbelini, 13–19/11/2026): [8 commits sobre o `main` do curso](https://github.com/giuliagarbelini26296/full-cycle-chat/compare/0c7ddf8...contribuicoes) (6 de funcionalidades, testes e docs e 2 de preparação desta publicação), com 118 arquivos alterados. Os commits foram escritos com apoio de ferramentas de IA (Codex e Claude) e revisados por mim. Os planos e as especificações ficam em `docs/funcionalidades/13-*` e `14-*`.
+>
+> - **F13 — Consulta segura a dados de negócio:** o Agente responde perguntas sobre faturamento, pedidos e clientes de uma base **fictícia**. As consultas SQL passam por validação (sqlglot) e por um usuário somente leitura, e cada número é conferido contra o resultado antes da entrega. Há também um orçamento de chamadas ao modelo por pedido.
+>   - Python/Google ADK: `apps/agents/app/business/`, `app/agent_requests/model_budget.py` e migrações Alembic 0002/0003.
+>   - NestJS: erros de acesso negado a dados.
+> - **F14 — Relatório em PDF assíncrono:** o pedido entra numa fila, e um Worker separado (ARQ/Redis, sem chamar o modelo) gera o PDF com ReportLab e guarda em S3 privado.
+>   - Python: `apps/agents/app/reports/`.
+>   - NestJS: módulo `src/reports/` com token do Worker e 2 migrações TypeORM.
+>   - Next.js: rota de download protegida, que só entrega o arquivo para quem tem permissão, e o anexo na conversa.
+> - **Correção de acessibilidade:** cancelar a desconexão de um Agente mantém a janela aberta e devolve o foco ao botão de origem.
+> - **Testes adicionados:**
+>   - pytest: `tests/unit/test_business_*`, `test_model_budget.py`, `tests/integration/test_business*.py` e `test_report_worker.py`.
+>   - Jest e2e: `apps/chat-api/test/business-data.e2e-spec.ts` e `reports.e2e-spec.ts`.
+>   - Playwright: `apps/web/e2e/agentes/relatorio-pdf*.spec.ts`.
+>
+> **Resultados verificados ao preparar este fork (19/11/2026):** `pytest tests/unit` em `apps/agents` deu **112 passed**, incluindo **24 testes** dos módulos de consulta e orçamento. Os testes de integração, Jest e Playwright precisam do ambiente Docker completo e não foram executados novamente; os resultados da época estão em `docs/funcionalidades/14-relatorio-em-pdf/tarefas/01-gerar-e-entregar-pdf/validacao.md`. Esse registro inclui as pendências: o teste completo com IA real ficou bloqueado pela cota gratuita do provedor.
+>
+> **Ajuste para a versão pública:** o último commit remove capturas de tela e referências de um ambiente privado em que a validação original foi feita. A lógica de consultas e relatórios não mudou.
+
 <div align="center">
 
 <a href="https://fullcycle.com.br">
