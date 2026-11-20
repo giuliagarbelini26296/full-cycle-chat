@@ -2,7 +2,7 @@ import json
 
 from arq.connections import RedisSettings, create_pool
 
-QUEUE_NAME = "digitaly:reports"
+QUEUE_NAME = "chat:reports"
 
 
 def serialize(value) -> bytes:

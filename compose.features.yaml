@@ -1,4 +1,4 @@
-# Ambiente isolado para validar consultas e relatórios sem alterar o piloto.
+# Ambiente isolado para validar consultas e relatórios (F13–F14) sem alterar o ambiente principal.
 services:
   web:
     image: fullcycle-slack-ia-web
@@ -43,15 +43,3 @@ services:
     ports: !reset []
   s3:
     ports: !reset []
-  e2e:
-    image: digitaly-e2e:playwright-1.65.0
-    environment:
-      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright-digitaly
-      CHAT_WORKER_TOKEN: dev-chat-worker-token
-    volumes:
-      - features-browser:/ms-playwright-digitaly
-
-volumes:
-  features-browser:
-    external: true
-    name: digitaly-validation_validation-browser

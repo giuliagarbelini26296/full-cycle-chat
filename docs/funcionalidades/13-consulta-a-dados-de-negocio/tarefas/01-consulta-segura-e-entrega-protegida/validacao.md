@@ -1,6 +1,6 @@
 # Validação da F13-T01
 
-Ambiente isolado `digitaly-features`, sem portas publicadas e sem modificar o piloto ativo.
+Ambiente isolado `chat-features`, sem portas publicadas e sem modificar o piloto ativo.
 
 - API: revisão de 15/11/2026 com 512 testes e2e, 85 unitários e 73 de integração aprovados; lint, TypeScript e build passaram. O caso anteriormente intermitente do cursor passou na execução completa.
 - Serviço de agentes: parser/lastro passaram, inclusive escrita, CTE com escrita, funções de arquivo, catálogos, múltiplas instruções e números sem resultado. Papel real PostgreSQL recusou escrita, CREATE/TEMP e conexão aos bancos do chat/agentes.

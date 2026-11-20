@@ -38,7 +38,7 @@ test("gera e baixa PDF com IA e Worker reais sem expor a outra Pessoa", async ({
     const pendingDownload = page.waitForEvent("download");
     await downloadButton.click();
     const download = await pendingDownload;
-    expect(download.suggestedFilename()).toBe("relatorio-digitaly.pdf");
+    expect(download.suggestedFilename()).toBe("relatorio.pdf");
     const path = await download.path();
     expect(path).not.toBeNull();
     const content = await readFile(path!);

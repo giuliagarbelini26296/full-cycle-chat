@@ -99,7 +99,7 @@ describe('Relatório protegido', () => {
         secretAccessKey: 'fullcycle-secret',
       },
     });
-    const key = `digitaly/${id}.pdf`;
+    const key = `reports/${id}.pdf`;
     try {
       await storage.send(
         new PutObjectCommand({

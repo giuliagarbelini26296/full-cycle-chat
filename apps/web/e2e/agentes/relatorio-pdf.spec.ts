@@ -33,7 +33,7 @@ for (const theme of ['light','dark'] as const) {
       const download = page.waitForEvent('download');
       await button.focus();
       await page.keyboard.press('Enter');
-      expect((await download).suggestedFilename()).toBe('relatorio-digitaly.pdf');
+      expect((await download).suggestedFilename()).toBe('relatorio.pdf');
       await testInfo.attach(`Relatório autorizado ${theme}`,{body:await page.screenshot(),contentType:'image/png'});
       await otherPage.reload();
       await readyHistory(otherPage,sharedChannel.name);

@@ -188,7 +188,7 @@ async def test_limpeza_remove_so_arquivos_e_rascunhos_expirados_e_preserva_audit
     keys = [
         object_key(old_id),
         object_key(fresh_id),
-        "digitaly/manual.pdf",
+        "reports/manual.pdf",
         f"outro/{old_id}.pdf",
     ]
     ctx = {}

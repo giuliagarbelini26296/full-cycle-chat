@@ -1,22 +1,22 @@
-# Consultas e relatórios do piloto Digitaly
+# Consultas e relatórios (F13–F14)
 
-Este ambiente usa exclusivamente vendas fictícias. Não conecta Teams/Outlook e não recebe dados corporativos enquanto a autorização estiver pendente. O projeto `digitaly-features` tem bancos, Redis e arquivos próprios; não altera os dados nem os processos do piloto público.
+Este ambiente usa exclusivamente vendas fictícias. Não conecta Teams/Outlook e não recebe dados corporativos enquanto a autorização estiver pendente. O projeto `chat-features` tem bancos, Redis e arquivos próprios; não altera os dados nem os processos do ambiente principal.
 
 ## Preparar o ambiente isolado
 
 Execute os comandos a partir da raiz desta cópia de trabalho. As senhas nos endereços abaixo são fixas de desenvolvimento.
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml --profile reports --profile e2e up -d --build --wait
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec chat-api pnpm migration:run
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run alembic upgrade head
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec -e BUSINESS_SEED_DATABASE_URL=postgresql://business:business@postgres:5432/business agents uv run python scripts/seed_business_demo.py
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml --profile reports --profile e2e up -d --build --wait
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec chat-api pnpm migration:run
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec agents uv run alembic upgrade head
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec -e BUSINESS_SEED_DATABASE_URL=postgresql://business:business@postgres:5432/business agents uv run python scripts/seed_business_demo.py
 ```
 
 Espere as instalações terminarem nos logs antes de rodar os servidores. Os comandos de criação de Pessoas, Canal e bot estão no `AGENTS.md` da API. Liberar dados exige uma ação própria, independente do papel de administrador:
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec chat-api pnpm accounts set-data-access <e-mail> on
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec chat-api pnpm accounts set-data-access <e-mail> on
 ```
 
 Use `off` para revogar. A operação encerra as Sessões e exige novo login. Quem não tem acesso recebe a versão bloqueada também em histórico, citações, Atividade e reconexão. O BFF nunca encaminha uma citação marcada como negócio ao modelo principal.
@@ -24,12 +24,12 @@ Use `off` para revogar. A operação encerra as Sessões e exige novo login. Que
 Os contêineres de desenvolvimento ficam parados após instalar dependências; iniciar cada servidor em um terminal:
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec chat-api pnpm start:dev
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec web pnpm dev --hostname 0.0.0.0
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run python /home/app/repo/scripts/iniciar-agentes-piloto.py
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec chat-api pnpm start:dev
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec web pnpm dev --hostname 0.0.0.0
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec agents uv run uvicorn app.fast_api_app:app --host 0.0.0.0 --port 8000
 ```
 
-O Worker inicia pelo profile `reports`, sem chave de IA ou importação do ADK. Este Compose não publica portas. O navegador de validação roda no serviço `e2e`, que encaminha seus próprios endereços locais.
+O Worker inicia pelo profile `reports`, sem chave de IA ou importação do ADK. Este Compose não publica portas. Os testes de navegador usam o serviço `e2e` do `compose.yaml` original do curso; a imagem customizada usada na validação original não acompanha esta versão.
 
 ## Experimentar quando houver cota de IA
 
@@ -51,19 +51,19 @@ O Redis recebe somente um identificador de job, em JSON. SQL, pergunta e rascunh
 
 O prazo da geração é conferido na API. Uma interrupção entre registrar o relatório e enfileirar não deixa uma Mensagem eternamente na fila: a rotina de expiração a encerra quando o Worker/API estiverem disponíveis. O estado final atualiza a Mensagem original do relatório.
 
-Arquivos e rascunhos expiram pelo período de retenção; a limpeza só remove objetos do prefixo `digitaly/` com nome de UUID e extensão PDF. A auditoria de consultas e tentativas permanece separada; a política de retenção corporativa dela continua pendente. Reiniciar não exige apagar volumes.
+Arquivos e rascunhos expiram pelo período de retenção; a limpeza só remove objetos do prefixo `reports/` com nome de UUID e extensão PDF. A auditoria de consultas e tentativas permanece separada; a política de retenção corporativa dela continua pendente. Reiniciar não exige apagar volumes.
 
 O download pede uma nova assinatura à API e reconfere participação e permissão. Um link já emitido funciona até vencer sua validade curta, inclusive se o acesso for revogado nesse intervalo. A URL assinada não é gravada no chat ou no Redis. O S3 recusa leitura e listagem anônimas.
 
-Para usar o PDF no domínio público, será necessário configurar o endpoint público de assinatura e encaminhar o caminho do bucket sem reescrever caminho/Host, conforme a spec. Essa alteração não foi aplicada ao piloto ativo. Credenciais e dados do ambiente isolado não devem ser reaproveitados como credenciais corporativas.
+Para usar o PDF no domínio público, será necessário configurar o endpoint público de assinatura e encaminhar o caminho do bucket sem reescrever caminho/Host, conforme a spec. Credenciais e dados do ambiente isolado não devem ser reaproveitados como credenciais corporativas.
 
 ## Conferir sem gastar cota de IA
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run pytest tests/unit
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run pytest tests/integration/test_report_worker.py tests/integration/test_business_guards.py tests/integration/test_business.py::test_receita_e_clientes_na_base_ficticia tests/integration/test_business.py::test_papel_nao_escreve_nem_cria_objetos_ou_le_outros_bancos
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec chat-api pnpm test:e2e --runInBand reports business-data
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=chromium agentes/relatorio-pdf.spec.ts
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec agents uv run pytest tests/unit
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec agents uv run pytest tests/integration/test_report_worker.py tests/integration/test_business_guards.py tests/integration/test_business.py::test_receita_e_clientes_na_base_ficticia tests/integration/test_business.py::test_papel_nao_escreve_nem_cria_objetos_ou_le_outros_bancos
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec chat-api pnpm test:e2e --runInBand reports business-data
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=chromium agentes/relatorio-pdf.spec.ts
 ```
 
 Não rode duas suítes da API simultaneamente: ambas recriam `chat_test`. Também não rode dois Playwrights no mesmo diretório de resultados. A suíte real do agente e o projeto `modelo-real` do navegador precisam da cota disponível.
@@ -71,7 +71,7 @@ Não rode duas suítes da API simultaneamente: ambas recriam `chat_test`. També
 No Mac, a regressão sem IA pode rodar com menos processos para reduzir a pressão do navegador:
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=chromium --project=canais-publicos --workers=2
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=chromium --project=canais-publicos --workers=2
 ```
 
 Depois de compilar uma nova versão, reinicie os processos que usam a compilação antes dos testes de navegador. Um servidor ainda executando o build anterior pode servir arquivos incompatíveis com os novos arquivos estáticos.
@@ -79,17 +79,17 @@ Depois de compilar uma nova versão, reinicie os processos que usam a compilaç�
 O exemplo exportável é criado pelo comando abaixo, usando uma referência fictícia conferida contra o banco. Ele serve como artefato/fixture de validação, não como resposta de IA em produção:
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec agents uv run python scripts/generate_demo_report.py
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec agents uv run python scripts/generate_demo_report.py
 ```
 
-Resultado em `output/pdf/relatorio-digitaly-demonstracao.pdf`. Para testar a rotina de Operações e Delivery, veja [o roteiro fictício](piloto-operacoes-delivery.md).
+Resultado em `output/pdf/relatorio-demonstracao.pdf`.
 
 ## Validação do PDF com IA real
 
 Com os servidores atualizados e o Worker ativo, execute primeiro o caso do PDF, antes de gastar a cota com a regressão geral:
 
 ```sh
-docker compose -p digitaly-features -f compose.yaml -f compose.mac.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=modelo-real agentes/relatorio-pdf-real.spec.ts --workers=1
+docker compose -p chat-features -f compose.yaml -f compose.features.yaml exec e2e npm run test:e2e -- --project=modelo-real agentes/relatorio-pdf-real.spec.ts --workers=1
 ```
 
 Esse teste envia o pedido pela interface, sem simular a resposta do modelo, o enfileiramento ou a entrega do Worker. Confere o arquivo PDF baixado, a persistência após recarregar e a ocultação para uma Pessoa sem acesso. A suíte de integração do Worker confere o conteúdo numérico extraído do PDF; o caso de navegador não substitui essa conferência.

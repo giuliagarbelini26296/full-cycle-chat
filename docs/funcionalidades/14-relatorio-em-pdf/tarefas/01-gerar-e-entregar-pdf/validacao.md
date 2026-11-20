@@ -1,6 +1,6 @@
 # Validação da F14-T01
 
-Ambiente isolado `digitaly-features`, sem alterar o piloto público.
+Ambiente isolado `chat-features`, sem alterar o ambiente principal.
 
 - Worker real com Redis, PostgreSQL e S3: geração, lastro, leitura anônima negada, reentrega idempotente e três tentativas de rascunho inválido passaram. Limpeza e guardas de negócio foram exercitadas na suíte local; registros detalhados ficam nos logs ignorados em `.local`.
 - Processo do Worker conferido sem importação do ADK e sem chave de IA.
@@ -15,11 +15,11 @@ Adicionado `apps/web/e2e/agentes/relatorio-pdf-real.spec.ts` ao projeto `modelo-
 
 Na tentativa desta revisão, o provedor retornou HTTP 429 de cota diária (20 chamadas gratuitas por dia). O portal publicou a resposta de falha; nenhum PDF foi gerado. O teste permanece reprovado/bloqueado, não aprovado ou ignorado. A consulta real passou antes da cota esgotar. A regressão de agentes terminou com 58 aprovados e 7 falhas de limite do provedor.
 
-Pendências para fechar a tarefa: aprovar o caso completo com IA quando houver cota e resolver as falhas da regressão descritas abaixo. Os comandos e a ordem recomendada estão em `docs/consultas-e-relatorios-digitaly.md`. Não houve merge, push ou atualização do domínio público.
+Pendências para fechar a tarefa: aprovar o caso completo com IA quando houver cota e resolver as falhas da regressão descritas abaixo. Os comandos e a ordem recomendada estão em `docs/consultas-e-relatorios.md`. Não houve merge nem publicação.
 
 ## Revisão visual e sincronização dos testes
 
-As quatro capturas atualizadas em `capturas/` foram inspecionadas: PDF autorizado e conteúdo bloqueado, nos temas claro e escuro. A Pessoa sem acesso não recebe botão de download. São cenários de interface com arquivo de fixture no armazenamento, não evidência de geração pelo modelo real.
+As quatro capturas desta etapa (removidas da versão pública por exibirem a identidade visual de um ambiente privado) foram inspecionadas: PDF autorizado e conteúdo bloqueado, nos temas claro e escuro. A Pessoa sem acesso não recebe botão de download. São cenários de interface com arquivo de fixture no armazenamento, não evidência de geração pelo modelo real.
 
 A primeira nova rodada completa terminou com 289 aprovações, uma falha e sete casos dependentes não executados. O registro da falha de navegação a uma citação mostrou que a verificação de viewport consumia 2,8 s antes de começar a conferir um destaque que dura 2 s. O teste passou a observar o destaque e sua presença na viewport enquanto a outra aba envia a Mensagem. O cenário passou três vezes seguidas após o ajuste, sem alterar código de produção.
 
@@ -33,4 +33,4 @@ Resultado da revisão: consulta real e componentes locais de segurança/geraçã
 
 ## Atualização de 16/11/2026
 
-A instabilidade ao cancelar a desconexão de um Agente foi corrigida no código de produção e verificada com 20 cenários repetidos, incluindo 60 cancelamentos nos dois temas. O registro está em `docs/funcionalidades/10-conexao-de-agentes/tarefas/07-desconectar-um-agente/correcao-cancelamento.md`. A pendência desse fluxo está resolvida no ambiente isolado. Permanecem separadas a atualização do contador de Tarefas e a validação completa de PDF com IA. O piloto público não foi atualizado.
+A instabilidade ao cancelar a desconexão de um Agente foi corrigida no código de produção e verificada com 20 cenários repetidos, incluindo 60 cancelamentos nos dois temas. O registro está em `docs/funcionalidades/10-conexao-de-agentes/tarefas/07-desconectar-um-agente/correcao-cancelamento.md`. A pendência desse fluxo está resolvida no ambiente isolado. Permanecem separadas a atualização do contador de Tarefas e a validação completa de PDF com IA. O ambiente principal não foi atualizado.

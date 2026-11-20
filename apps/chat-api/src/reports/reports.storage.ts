@@ -9,7 +9,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Env } from '../config/env.schema';
 import { ReportsUnavailableError } from './report-errors';
 
-export const reportObjectKey = (id: string) => `digitaly/${id}.pdf`;
+export const reportObjectKey = (id: string) => `reports/${id}.pdf`;
 
 @Injectable()
 export class ReportsStorage {
@@ -62,7 +62,7 @@ export class ReportsStorage {
           Bucket: this.config.get('S3_REPORTS_BUCKET', { infer: true }),
           Key: reportObjectKey(id),
           ResponseContentDisposition:
-            'attachment; filename="relatorio-digitaly.pdf"',
+            'attachment; filename="relatorio.pdf"',
         }),
         {
           expiresIn: this.config.get('REPORT_DOWNLOAD_TTL_SECONDS', {

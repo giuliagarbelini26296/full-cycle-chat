@@ -8,7 +8,7 @@ from app.reports.config import ReportWorkerConfig
 
 
 def object_key(request_id: str) -> str:
-    return f"digitaly/{UUID(request_id)}.pdf"
+    return f"reports/{UUID(request_id)}.pdf"
 
 
 class ReportStorage:
@@ -43,12 +43,12 @@ class ReportStorage:
     def cleanup(self) -> int:
         removed = 0
         paginator = self.client.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=self.bucket, Prefix="digitaly/"):
+        for page in paginator.paginate(Bucket=self.bucket, Prefix="reports/"):
             for item in page.get("Contents", []):
                 key = item["Key"]
                 # Nunca apaga chaves fora do padrão próprio, nem objetos ainda válidos.
                 try:
-                    request_id = key.removeprefix("digitaly/").removesuffix(".pdf")
+                    request_id = key.removeprefix("reports/").removesuffix(".pdf")
                     if key != object_key(request_id):
                         continue
                 except ValueError:

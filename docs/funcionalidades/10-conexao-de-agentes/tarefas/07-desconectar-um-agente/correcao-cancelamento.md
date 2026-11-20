@@ -1,6 +1,6 @@
 # Correção do cancelamento — 16/11/2026
 
-Executada no ambiente isolado `digitaly-features`, sem acessar o modelo ou alterar o piloto público.
+Executada no ambiente isolado `chat-features`, sem acessar o modelo ou alterar o ambiente principal.
 
 ## Comportamento
 
@@ -21,7 +21,7 @@ Os tokens, textos, dimensões e cores foram preservados. A única mudança visua
 - Lint, TypeScript, **277 testes unitários** e compilação para produção aprovados.
 - Capturas finais dos dois temas registradas e conferidas separadamente.
 
-[Retorno do foco no tema claro](capturas/cancelamento-foco-claro.png) · [Retorno do foco no tema escuro](capturas/cancelamento-foco-escuro.png).
+As capturas desta verificação foram removidas da versão pública por exibirem a identidade visual de um ambiente privado.
 
 Logs locais ignorados: `.local/disconnect-final.log`, `.local/disconnect-visual.log`, `.local/disconnect-web-checks.log` e `.local/disconnect-last-checks.log`.
 

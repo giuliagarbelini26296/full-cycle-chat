@@ -18,7 +18,7 @@ async def main():
     check_grounding(draft, rows)
     content = build_pdf("Qual foi o faturamento pago de novembro de 2026?", draft, rows)
     root = Path(__file__).resolve().parents[3]
-    output = root / "output/pdf/relatorio-digitaly-demonstracao.pdf"
+    output = root / "output/pdf/relatorio-demonstracao.pdf"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(content)
     fixture = root / "apps/web/e2e/fixtures/relatorio-ficticio.pdf"

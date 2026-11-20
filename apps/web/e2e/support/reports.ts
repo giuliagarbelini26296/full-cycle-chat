@@ -13,7 +13,7 @@ export async function startReport(id: string) {
 export async function readyReport(id: string) {
   const client = storage();
   try {
-    await client.send(new PutObjectCommand({Bucket:'reports',Key:`digitaly/${id}.pdf`,Body:await readFile('e2e/fixtures/relatorio-ficticio.pdf'),ContentType:'application/pdf',ACL:'private'}));
+    await client.send(new PutObjectCommand({Bucket:'reports',Key:`reports/${id}.pdf`,Body:await readFile('e2e/fixtures/relatorio-ficticio.pdf'),ContentType:'application/pdf',ACL:'private'}));
   } finally {client.destroy();}
   const response = await fetch(`${API}/worker/reports/${id}/complete`,{method:'POST',headers:{Authorization:`Bearer ${process.env.CHAT_WORKER_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({status:'ready'})});
   if (!response.ok) throw new Error(`Entrega de relatório recusada: ${response.status}`);
@@ -21,6 +21,6 @@ export async function readyReport(id: string) {
 
 export async function removeReportFile(id: string) {
   const client = storage();
-  try {await client.send(new DeleteObjectCommand({Bucket:'reports',Key:`digitaly/${id}.pdf` }));}
+  try {await client.send(new DeleteObjectCommand({Bucket:'reports',Key:`reports/${id}.pdf` }));}
   finally {client.destroy();}
 }

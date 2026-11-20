@@ -28,7 +28,7 @@ def build_pdf(question: str, draft: str, rows: list[dict]) -> bytes:
     output = BytesIO()
     styles = getSampleStyleSheet()
     body = ParagraphStyle(
-        "DigitalyBody",
+        "ReportBody",
         parent=styles["BodyText"],
         fontName="Helvetica",
         fontSize=10,
@@ -37,7 +37,7 @@ def build_pdf(question: str, draft: str, rows: list[dict]) -> bytes:
         spaceAfter=9,
     )
     title = ParagraphStyle(
-        "DigitalyTitle",
+        "ReportTitle",
         parent=styles["Title"],
         fontName="Helvetica-Bold",
         fontSize=22,
@@ -47,11 +47,11 @@ def build_pdf(question: str, draft: str, rows: list[dict]) -> bytes:
         spaceAfter=14,
     )
     small = ParagraphStyle(
-        "DigitalyCell", parent=body, fontSize=8, leading=11, spaceAfter=0
+        "ReportCell", parent=body, fontSize=8, leading=11, spaceAfter=0
     )
     story = [
-        Paragraph("Digitaly | Relatório", title),
-        Paragraph("DADOS FICTÍCIOS - PILOTO DE DEMONSTRAÇÃO", body),
+        Paragraph("Full Cycle Chat | Relatório", title),
+        Paragraph("DADOS FICTÍCIOS - DEMONSTRAÇÃO", body),
         Paragraph("Pedido", styles["Heading2"]),
         Paragraph(escape(question), body),
         Paragraph("Resumo conferido", styles["Heading2"]),
@@ -99,7 +99,7 @@ def build_pdf(question: str, draft: str, rows: list[dict]) -> bytes:
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#526c83"))
         canvas.drawString(
-            18 * mm, 12 * mm, "Digitaly Chat - demonstração com dados fictícios"
+            18 * mm, 12 * mm, "Full Cycle Chat - demonstração com dados fictícios"
         )
         canvas.drawRightString(192 * mm, 12 * mm, f"Página {doc.page}")
         canvas.restoreState()
@@ -111,8 +111,8 @@ def build_pdf(question: str, draft: str, rows: list[dict]) -> bytes:
         rightMargin=18 * mm,
         topMargin=18 * mm,
         bottomMargin=22 * mm,
-        title="Relatório Digitaly - dados fictícios",
-        author="Digitaly Chat",
+        title="Relatório - dados fictícios",
+        author="Full Cycle Chat",
     )
     document.build(story, onFirstPage=footer, onLaterPages=footer)
     return output.getvalue()
